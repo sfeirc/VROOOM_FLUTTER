@@ -1,0 +1,13 @@
+{
+  "email": "admin@vroomadmin.com",
+  "password": "admin123",
+  "hashedPassword": "$2a$10$XTx.rg5XKUb/6XsXY2ZTt.qAYb2STWLZZEBMxr4iZFfTr9cKH8uyi",
+  "userData": {
+    "IdUser": "USR202513675",
+    "Email": "admin@vroomadmin.com",
+    "Nom": "admin",
+    "Prenom": "admin",
+    "Role": "SUPERADMIN",
+    "PhotoProfil": "assets/images/default-profile.png"
+  }
+} 
