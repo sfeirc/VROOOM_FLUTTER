@@ -87,21 +87,21 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040C04e4"  // French language code (040C)
+        BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "VROOOM Prestige" "\0"
-            VALUE "FileDescription", "VROOOM - Location de Voitures de Luxe" "\0"
+            VALUE "CompanyName", "com.example" "\0"
+            VALUE "FileDescription", "vrooom_flutter" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "vrooom_lourd" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 VROOOM Prestige. Tous droits réservés." "\0"
-            VALUE "OriginalFilename", "vrooom_lourd.exe" "\0"
-            VALUE "ProductName", "VROOOM Prestige" "\0"
+            VALUE "InternalName", "vrooom_flutter" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
+            VALUE "OriginalFilename", "vrooom_flutter.exe" "\0"
+            VALUE "ProductName", "vrooom_flutter" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x040C, 1252  // French language code
+        VALUE "Translation", 0x409, 1252
     END
 END
 
