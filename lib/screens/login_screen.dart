@@ -24,8 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   
   // Variables d'état
-  bool _isPasswordVisible = false;
   bool _isLoading = false;
+  bool _obscurePassword = true;
   String? _errorMessage;
   
   // Instance du service API
@@ -41,56 +41,41 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // Méthode de connexion
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
 
-    try {
-      // Tentative de connexion
-      final response = await _apiService.login(_emailController.text, _passwordController.text);
-      
-      print('Réponse de connexion: $response');
-      
-      if (response['success'] == true && response['user'] != null) {
-        final user = response['user'];
-        print('Connexion réussie, informations utilisateur: $user');
-        
-        // Définit l'état d'authentification dans le provider
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        await authProvider.setUserData(user);
-        
-        // Assure que la session est correctement synchronisée
-        await _apiService.synchronizeSession();
-        
-        // Navigation vers le tableau de bord
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/dashboard');
+      try {
+        final success = await context.read<AuthProvider>().login(
+          _emailController.text,
+          _passwordController.text,
+        );
+
+        if (success && mounted) {
+          Navigator.pushReplacementNamed(context, '/dashboard');
         }
-      } else {
-        setState(() {
-          _errorMessage = 'Échec de la connexion: ${response['message'] ?? 'Erreur inconnue'}';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString();
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erreur de connexion: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+
     return Scaffold(
       body: Container(
         // Décoration avec dégradé de couleurs
@@ -108,121 +93,144 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Center(
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(isSmallScreen ? 16.0 : 24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Carte de connexion
+                  // Logo and Title
+                  Icon(
+                    Icons.directions_car,
+                    size: isSmallScreen ? 64 : 80,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'VROOOM Admin',
+                    style: GoogleFonts.poppins(
+                      fontSize: isSmallScreen ? 28 : 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Tableau de bord d\'administration',
+                    style: GoogleFonts.poppins(
+                      fontSize: isSmallScreen ? 16 : 18,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  SizedBox(height: screenHeight * 0.05),
+
+                  // Login Card
                   Card(
                     elevation: 8,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: SizedBox(
-                        width: 400,
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Titre
-                              Text(
-                                'Tableau de Bord Admin',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade900,
-                                ),
-                                textAlign: TextAlign.center,
+                    child: Container(
+                      width: isSmallScreen ? double.infinity : 400,
+                      padding: EdgeInsets.all(isSmallScreen ? 24 : 32),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'Connexion',
+                              style: GoogleFonts.poppins(
+                                fontSize: isSmallScreen ? 24 : 28,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(height: 32),
-                              
-                              // Champ email
-                              TextFormField(
-                                controller: _emailController,
-                                decoration: InputDecoration(
-                                  labelText: 'Email',
-                                  prefixIcon: const Icon(Icons.email_outlined),
-                                  border: OutlineInputBorder(
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            
+                            // Email Field
+                            TextFormField(
+                              controller: _emailController,
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                prefixIcon: const Icon(Icons.email),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              keyboardType: TextInputType.emailAddress,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Veuillez entrer votre email';
+                                }
+                                if (!value.contains('@')) {
+                                  return 'Veuillez entrer un email valide';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            // Password Field
+                            TextFormField(
+                              controller: _passwordController,
+                              decoration: InputDecoration(
+                                labelText: 'Mot de passe',
+                                prefixIcon: const Icon(Icons.lock),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              obscureText: _obscurePassword,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Veuillez entrer votre mot de passe';
+                                }
+                                if (value.length < 6) {
+                                  return 'Le mot de passe doit contenir au moins 6 caractères';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                            
+                            // Login Button
+                            SizedBox(
+                              height: 48,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _login,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue.shade900,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Veuillez entrer votre email';
-                                  }
-                                  if (!value.contains('@')) {
-                                    return 'Veuillez entrer un email valide';
-                                  }
-                                  return null;
-                                },
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : const Text('Se connecter'),
                               ),
-                              const SizedBox(height: 16),
-                              
-                              // Champ mot de passe
-                              TextFormField(
-                                controller: _passwordController,
-                                obscureText: !_isPasswordVisible,
-                                decoration: InputDecoration(
-                                  labelText: 'Mot de passe',
-                                  prefixIcon: const Icon(Icons.lock_outline),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _isPasswordVisible
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _isPasswordVisible = !_isPasswordVisible;
-                                      });
-                                    },
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Veuillez entrer votre mot de passe';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 24),
-                              
-                              // Bouton de connexion avec gestion de l'état de chargement
-                              Consumer<AuthProvider>(
-                                builder: (context, auth, child) {
-                                  if (auth.isLoading) {
-                                    return Center(
-                                      child: LoadingAnimationWidget.staggeredDotsWave(
-                                        color: Colors.blue.shade900,
-                                        size: 40,
-                                      ),
-                                    );
-                                  }
-                                  return ElevatedButton(
-                                    onPressed: _login,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue.shade900,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'Connexion',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

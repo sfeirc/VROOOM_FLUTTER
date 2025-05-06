@@ -1155,8 +1155,8 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                     if (imageUrlController.text.isNotEmpty) {
                                       // Utiliser notre proxy pour éviter les problèmes de CORS
                                       final proxyUrl = imageUrlController.text.startsWith('http')
-                                        ? 'http://localhost:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrlController.text)}'
-                                        : 'http://localhost:3000/${imageUrlController.text}';
+                                        ? 'http://172.16.199.254:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrlController.text)}'
+                                        : 'http://172.16.199.254:3000/${imageUrlController.text}';
                                       
                                       showDialog(
                                         context: context,
@@ -2050,8 +2050,8 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                     if (imageUrlController.text.isNotEmpty) {
                                       // Utiliser notre proxy pour éviter les problèmes de CORS
                                       final proxyUrl = imageUrlController.text.startsWith('http')
-                                        ? 'http://localhost:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrlController.text)}'
-                                        : 'http://localhost:3000/${imageUrlController.text}';
+                                        ? 'http://172.16.199.254:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrlController.text)}'
+                                        : 'http://172.16.199.254:3000/${imageUrlController.text}';
                                       // Afficher le dialogue
                                       showDialog(
                                         // Contexte
@@ -2812,28 +2812,28 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
     
     // Si l'URL est vide ou null, retourner une image par défaut
     if (imageUrl == null || imageUrl.isEmpty) {
-      return 'http://localhost:3000/api/assets/images/default-car.jpg';
+      return 'http://172.16.199.254:3000/api/assets/images/default-car.jpg';
     }
     
     // Gérer les URLs de motor1.com via notre proxy pour résoudre les problèmes de CORS
     if (imageUrl.contains('cdn.motor1.com')) {
       print('Utilisation du proxy pour l\'URL de motor1.com: $imageUrl');
-      return 'http://localhost:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrl)}';
+      return 'http://172.16.199.254:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrl)}';
     }
     // Gérer les autres URLs externes
     else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       print('Utilisation du proxy pour l\'URL externe: $imageUrl');
-      return 'http://localhost:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrl)}';
+      return 'http://172.16.199.254:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrl)}';
     } 
     // Gérer les chemins locaux
     else if (imageUrl.startsWith('assets/')) {
       print('Utilisation du chemin local: $imageUrl');
-      return 'http://localhost:3000/$imageUrl';
+      return 'http://172.16.199.254:3000/$imageUrl';
     } 
     // Cas par défaut
     else {
       print('Utilisation du chemin par défaut: $imageUrl');
-      return 'http://localhost:3000/$imageUrl';
+      return 'http://172.16.199.254:3000/$imageUrl';
     }
   }
 } 

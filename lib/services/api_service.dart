@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   // URL de base de l'API (à modifier selon l'environnement)
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'http://172.16.199.254:3000/api';
   
   // Implémentation du pattern Singleton pour garantir une seule instance
   static final ApiService _instance = ApiService._internal();

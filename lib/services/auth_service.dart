@@ -9,7 +9,7 @@ class AuthService {
     final user = await _apiService.login(email, password);
     
     if (user != null) {
-      // Store user session
+      // stocker les informations de l'utilisateur
       await _storage.write(key: 'user_id', value: user['id']);
       await _storage.write(key: 'user_role', value: user['role']);
       await _storage.write(key: 'user_email', value: user['email']);

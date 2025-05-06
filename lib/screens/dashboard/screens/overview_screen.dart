@@ -54,45 +54,75 @@ class _OverviewScreenState extends State<OverviewScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Tableau de bord',
-            style: GoogleFonts.poppins(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tableau de bord',
+              style: GoogleFonts.poppins(
+                fontSize: isSmallScreen ? 24 : 28,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              _buildStatCard(
-                icon: Icons.directions_car,
-                title: 'Véhicules',
-                value: _totalCars.toString(),
-                color: Colors.blue,
-              ),
-              const SizedBox(width: 16),
-              _buildStatCard(
-                icon: Icons.people,
-                title: 'Utilisateurs',
-                value: _totalUsers.toString(),
-                color: Colors.green,
-              ),
-              const SizedBox(width: 16),
-              _buildStatCard(
-                icon: Icons.calendar_today,
-                title: 'Réservations',
-                value: _totalReservations.toString(),
-                color: Colors.orange,
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          // Add more sections here like recent activities, charts, etc.
-        ],
+            const SizedBox(height: 24),
+            isSmallScreen
+                ? Column(
+                    children: [
+                      _buildStatCard(
+                        icon: Icons.directions_car,
+                        title: 'Véhicules',
+                        value: _totalCars.toString(),
+                        color: Colors.blue,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildStatCard(
+                        icon: Icons.people,
+                        title: 'Utilisateurs',
+                        value: _totalUsers.toString(),
+                        color: Colors.green,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildStatCard(
+                        icon: Icons.calendar_today,
+                        title: 'Réservations',
+                        value: _totalReservations.toString(),
+                        color: Colors.orange,
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      _buildStatCard(
+                        icon: Icons.directions_car,
+                        title: 'Véhicules',
+                        value: _totalCars.toString(),
+                        color: Colors.blue,
+                      ),
+                      const SizedBox(width: 16),
+                      _buildStatCard(
+                        icon: Icons.people,
+                        title: 'Utilisateurs',
+                        value: _totalUsers.toString(),
+                        color: Colors.green,
+                      ),
+                      const SizedBox(width: 16),
+                      _buildStatCard(
+                        icon: Icons.calendar_today,
+                        title: 'Réservations',
+                        value: _totalReservations.toString(),
+                        color: Colors.orange,
+                      ),
+                    ],
+                  ),
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }
@@ -103,48 +133,94 @@ class _OverviewScreenState extends State<OverviewScreen> {
     required String value,
     required Color color,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 5,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    
+    return isSmallScreen
+        ? Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 5,
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, color: color, size: 24),
-                const SizedBox(width: 8),
+                Row(
+                  children: [
+                    Icon(icon, color: color, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
                 Text(
-                  title,
+                  value,
                   style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: color,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              value,
-              style: GoogleFonts.poppins(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: color,
+          )
+        : Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(icon, color: color, size: 24),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    value,
+                    style: GoogleFonts.poppins(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
+          );
   }
 } 

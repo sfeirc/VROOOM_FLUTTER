@@ -22,11 +22,11 @@ require('dotenv').config();
 
 // Configuration de la base de données
 const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME || 'vroom_prestige'
+    host: '172.16.199.254',
+    port: 3306,
+    user: 'root',
+    password: 'clovis',
+    database: 'vroom_prestige'
 };
 
 // Création de l'application Express
@@ -172,7 +172,7 @@ app.use(express.json());
 // Configuration du middleware de session
 app.use(session({
     key: 'connect.sid',
-    secret: process.env.SESSION_SECRET || 'vroom_prestige',
+    secret: 'vroom_prestige',
     store: sessionStore,
     resave: false,
     saveUninitialized: true, // Modifié à true pour assurer la création de session
@@ -1358,7 +1358,7 @@ app.get('*.jpg|*.jpeg|*.png|*.gif|*.svg', (req, res, next) => {
 
 // Démarrage du serveur
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveur démarré sur le port ${PORT}`);
-    console.log(`Accès à l'API sur http://localhost:${PORT}`);
+    console.log(`Accès à l'API sur http://172.16.199.254:${PORT}`);
 });
