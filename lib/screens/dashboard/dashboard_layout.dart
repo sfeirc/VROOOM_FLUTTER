@@ -115,27 +115,27 @@ class _DashboardLayoutState extends State<DashboardLayout> {
 
   Widget _buildTopBar(String userName) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Text(
-            _titles[_selectedIndex],
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Spacer(),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        _titles[_selectedIndex],
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
           _buildUserProfile(userName, true),
         ],
       ),
@@ -144,44 +144,44 @@ class _DashboardLayoutState extends State<DashboardLayout> {
 
   Widget _buildUserProfile(String userName, bool isLarge) {
     return PopupMenuButton(
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.blue.shade900,
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.blue.shade900,
             radius: isLarge ? 20 : 16,
-            child: Text(
-              userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
+                              child: Text(
+                                userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: isLarge ? 16 : 14,
               ),
-            ),
-          ),
+                              ),
+                            ),
           if (isLarge) ...[
-            const SizedBox(width: 8),
-            Text(
-              userName,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const Icon(Icons.arrow_drop_down),
+                            const SizedBox(width: 8),
+                            Text(
+                              userName,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Icon(Icons.arrow_drop_down),
           ],
-        ],
-      ),
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          child: ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Déconnexion'),
-            onTap: () {
-              context.read<AuthProvider>().logout();
-              Navigator.of(context).pushReplacementNamed('/login');
-            },
-          ),
-        ),
-      ],
+                          ],
+                        ),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            child: ListTile(
+                              leading: const Icon(Icons.logout),
+                              title: const Text('Déconnexion'),
+                              onTap: () {
+                                context.read<AuthProvider>().logout();
+                                Navigator.of(context).pushReplacementNamed('/login');
+                              },
+                            ),
+                          ),
+                        ],
     );
   }
 
@@ -190,13 +190,13 @@ class _DashboardLayoutState extends State<DashboardLayout> {
     final padding = screenWidth > 768 ? 24.0 : 16.0;
     
     return Expanded(
-      child: Container(
-        color: Colors.grey.shade50,
+                  child: Container(
+                    color: Colors.grey.shade50,
         padding: EdgeInsets.symmetric(
           horizontal: padding,
           vertical: padding,
         ),
-        child: _screens[_selectedIndex],
+                    child: _screens[_selectedIndex],
       ),
     );
   }

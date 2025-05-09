@@ -44,12 +44,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      try {
+    try {
         final success = await context.read<AuthProvider>().login(
           _emailController.text,
           _passwordController.text,
         );
-
+      
         if (success && mounted) {
           Navigator.pushReplacementNamed(context, '/dashboard');
         }
@@ -62,8 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
         }
-      } finally {
-        if (mounted) {
+    } finally {
+      if (mounted) {
           setState(() => _isLoading = false);
         }
       }
@@ -131,91 +131,91 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Container(
                       width: isSmallScreen ? double.infinity : 400,
                       padding: EdgeInsets.all(isSmallScreen ? 24 : 32),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
                               'Connexion',
-                              style: GoogleFonts.poppins(
+                                style: GoogleFonts.poppins(
                                 fontSize: isSmallScreen ? 24 : 28,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 24),
-                            
-                            // Email Field
-                            TextFormField(
-                              controller: _emailController,
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: const Icon(Icons.email),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  fontWeight: FontWeight.bold,
                                 ),
+                                textAlign: TextAlign.center,
                               ),
+                            const SizedBox(height: 24),
+                              
+                            // Email Field
+                              TextFormField(
+                                controller: _emailController,
+                                decoration: InputDecoration(
+                                  labelText: 'Email',
+                                prefixIcon: const Icon(Icons.email),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
                               keyboardType: TextInputType.emailAddress,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Veuillez entrer votre email';
-                                }
-                                if (!value.contains('@')) {
-                                  return 'Veuillez entrer un email valide';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Veuillez entrer votre email';
+                                  }
+                                  if (!value.contains('@')) {
+                                    return 'Veuillez entrer un email valide';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              
                             // Password Field
-                            TextFormField(
-                              controller: _passwordController,
-                              decoration: InputDecoration(
-                                labelText: 'Mot de passe',
+                              TextFormField(
+                                controller: _passwordController,
+                                decoration: InputDecoration(
+                                  labelText: 'Mot de passe',
                                 prefixIcon: const Icon(Icons.lock),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
                                     _obscurePassword
                                         ? Icons.visibility
                                         : Icons.visibility_off,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
                                       _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
+                                      });
+                                    },
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
                               obscureText: _obscurePassword,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Veuillez entrer votre mot de passe';
-                                }
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Veuillez entrer votre mot de passe';
+                                  }
                                 if (value.length < 6) {
                                   return 'Le mot de passe doit contenir au moins 6 caractères';
                                 }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 24),
-                            
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              
                             // Login Button
                             SizedBox(
                               height: 48,
                               child: ElevatedButton(
                                 onPressed: _isLoading ? null : _login,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue.shade900,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue.shade900,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
                                 child: _isLoading
                                     ? const SizedBox(
                                         width: 24,
@@ -228,9 +228,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                       )
                                     : const Text('Se connecter'),
+                                    ),
                               ),
-                            ),
-                          ],
+                            ],
                         ),
                       ),
                     ),

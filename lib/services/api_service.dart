@@ -1,15 +1,29 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform, Process;
+import 'dart:async';
+import 'dart:isolate';
 
 class ApiService {
   // URL de base de l'API (à modifier selon l'environnement)
-  static const String baseUrl = 'http://172.16.199.254:3000/api';
+  static String get baseUrl {
+    if (kIsWeb) {
+      // pour le web
+      return 'http://172.16.199.254:3000/api';
+    } else {
+      // pour windows et autres plateformes, toujours utiliser la vm
+      return 'http://172.16.199.254:3000/api';
+    }
+  }
   
   // Implémentation du pattern Singleton pour garantir une seule instance
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
-  ApiService._internal();
+  ApiService._internal() {
+    print('API Service initialized with base URL: $baseUrl');
+  }
 
   // Client HTTP qui conserve les cookies entre les requêtes
   final _client = http.Client();

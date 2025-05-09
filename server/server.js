@@ -192,6 +192,16 @@ const db = mysql.createPool({
     queueLimit: 0
 });
 
+// Test de la connexion à la base de données
+db.getConnection((err, connection) => {
+    if (err) {
+        console.error('Database connection error:', err);
+        return;
+    }
+    console.log('Successfully connected to database');
+    connection.release();
+});
+
 // Middleware d'authentification avec meilleure gestion des erreurs
 const authenticateSession = (req, res, next) => {
     console.log('Vérification de l\'authentification:', req.session);
@@ -233,25 +243,48 @@ const authenticateSession = (req, res, next) => {
 // Connexion
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
-    console.log('Tentative de connexion pour:', email);
+    // Trim the email to remove any whitespace or special characters
+    const cleanEmail = email.trim();
+    console.log('Tentative de connexion pour:', cleanEmail);
 
     try {
+        console.log('Attempting database connection...');
+        console.log('Database config:', {
+            host: dbConfig.host,
+            port: dbConfig.port,
+            user: dbConfig.user,
+            database: dbConfig.database
+        });
+
+        // Log the exact SQL query we're about to execute
+        const query = 'SELECT * FROM Users WHERE Email = ?';
+        console.log('Executing query:', query);
+        console.log('With parameters:', [cleanEmail]);
+
         // Authentification normale via base de données
-        const [rows] = await db.promise().query(
-            'SELECT * FROM Users WHERE Email = ?',
-            [email]
-        );
+        const [rows] = await db.promise().query(query, [cleanEmail]);
+
+        console.log('Raw query result:', rows);
+        console.log('Number of rows found:', rows.length);
 
         if (rows.length === 0) {
-            console.log('Utilisateur non trouvé:', email);
+            console.log('Utilisateur non trouvé:', cleanEmail);
             return res.status(401).json({ message: 'Identifiants invalides' });
         }
 
         const user = rows[0];
+        console.log('User found:', {
+            id: user.IdUser,
+            email: user.Email,
+            role: user.Role,
+            hasPassword: !!user.MotDePasse
+        });
+
         const isPasswordValid = await bcrypt.compare(password, user.MotDePasse);
+        console.log('Password validation result:', isPasswordValid);
 
         if (!isPasswordValid) {
-            console.log('Mot de passe invalide pour:', email);
+            console.log('Mot de passe invalide pour:', cleanEmail);
             return res.status(401).json({ message: 'Identifiants invalides' });
         }
 
@@ -720,24 +753,84 @@ app.post('/api/admin/cars', authenticateSession, async (req, res) => {
             return res.status(403).json({ message: 'Non autorisé' });
         }
         
-        const { 
-            NomMarque, Modele, Annee, PrixLocation, IdStatut, NbPorte, 
-            BoiteVitesse, Couleur, Energie, Puissance, NbPlaces, Description, Photo
+        const {
+            Modele, NbPorte, BoiteVitesse, Annee, Couleur, 
+            Photo, Energie, Puissance, PrixLocation, Description,
+            NbPlaces, IdStatut, IdMarque, Type
         } = req.body;
+
+        // Vérification des champs obligatoires
+        if (!Modele || !Annee || !PrixLocation || !IdStatut || !IdMarque || !Type) {
+            return res.status(400).json({ 
+                message: 'Champs obligatoires manquants',
+                required: ['Modele', 'Annee', 'PrixLocation', 'IdStatut', 'IdMarque', 'Type']
+            });
+        }
+
+        // Récupération de l'ID du type
+        let newTypeId = null;
+        if (Type) {
+            // Si c'est un nombre, utiliser directement
+            if (!isNaN(Type)) {
+                newTypeId = parseInt(Type);
+            } else {
+                // Sinon chercher par nom
+                const [typeResult] = await db.promise().query(
+                    'SELECT IdType FROM TypeVehicule WHERE NomType = ?',
+                    [Type]
+                );
+
+                if (typeResult.length === 0) {
+                    return res.status(400).json({ 
+                        message: 'Type de véhicule invalide',
+                        type: Type
+                    });
+                }
+
+                newTypeId = typeResult[0].IdType;
+            }
+        } else {
+            // Si aucun type n'est fourni, récupérer le type actuel
+            const [currentTypeResult] = await db.promise().query(
+                'SELECT IdType FROM Voiture WHERE IdVoiture = ?',
+                [carId]
+            );
+            
+            if (currentTypeResult.length === 0) {
+                return res.status(404).json({ message: 'Voiture non trouvée' });
+            }
+            
+            newTypeId = currentTypeResult[0].IdType;
+        }
+
+        // Debug logging
+        console.log('Type ID:', newTypeId);
         
         console.log('Création d\'une nouvelle voiture:', req.body);
         
-        // Récupération de l'ID de la marque à partir du nom
-        const [brandRows] = await db.promise().query(
-            'SELECT IdMarque FROM MarqueVoiture WHERE NomMarque = ?',
-            [NomMarque]
-        );
-        
-        if (brandRows.length === 0) {
-            return res.status(404).json({ message: 'Marque non trouvée' });
+        // Récupération de l'ID de la marque
+        let updateBrandId = null;
+        if (IdMarque) {
+            // Si c'est un nombre, utiliser directement
+            if (!isNaN(IdMarque)) {
+                updateBrandId = parseInt(IdMarque);
+            } else {
+                // Sinon chercher par nom
+                const [brandRows] = await db.promise().query(
+                    'SELECT IdMarque FROM MarqueVoiture WHERE NomMarque = ?',
+                    [IdMarque]
+                );
+                
+                if (brandRows.length === 0) {
+                    return res.status(400).json({ 
+                        message: 'Marque invalide',
+                        brand: IdMarque
+                    });
+                }
+                
+                updateBrandId = brandRows[0].IdMarque;
+            }
         }
-        
-        const IdMarque = brandRows[0].IdMarque;
         
         // Laisser MySQL gérer l'auto-incrémentation pour IdVoiture
         console.log('Insertion de la voiture avec ID auto-incrémenté');
@@ -758,8 +851,8 @@ app.post('/api/admin/cars', authenticateSession, async (req, res) => {
             Modele, NbPorte || 4, BoiteVitesse || 'Automatique', 
             Annee, Couleur || 'Blanc', photoUrl, 
             Energie || 'Essence', Puissance || 100, PrixLocation,
-            Description || `${NomMarque} ${Modele}`, NbPlaces || 5, 
-            IdStatut, IdMarque, 1 // Type par défaut à 1
+            Description || `${IdMarque} ${Modele}`, NbPlaces || 5, 
+            IdStatut, updateBrandId, newTypeId
         ]);
         
         // Récupération de l'ID auto-généré
@@ -768,7 +861,7 @@ app.post('/api/admin/cars', authenticateSession, async (req, res) => {
         
         res.status(201).json({ 
             message: 'Voiture créée avec succès',
-            car: { IdVoiture, NomMarque, Modele, Annee, PrixLocation, Photo: photoUrl }
+            car: { IdVoiture, IdMarque, Modele, Annee, PrixLocation, Photo: photoUrl }
         });
     } catch (error) {
         console.error('Erreur lors de la création de la voiture:', error);
@@ -791,14 +884,14 @@ app.put('/api/admin/cars/:id', authenticateSession, async (req, res) => {
         const carId = parseInt(req.params.id) || req.params.id;
         const { 
             NomMarque, Modele, Annee, PrixLocation, IdStatut, NbPorte,
-            BoiteVitesse, Couleur, Energie, Puissance, NbPlaces, Description, Photo
+            BoiteVitesse, Couleur, Energie, Puissance, NbPlaces, Description, Photo, Type
         } = req.body;
         
         console.log(`Mise à jour de la voiture avec l'ID: ${carId}`, req.body);
         
         // Vérification si la voiture existe
         const [carCheck] = await db.promise().query(
-            'SELECT IdVoiture FROM Voiture WHERE IdVoiture = ?',
+            'SELECT * FROM Voiture WHERE IdVoiture = ?',
             [carId]
         );
         
@@ -806,104 +899,170 @@ app.put('/api/admin/cars/:id', authenticateSession, async (req, res) => {
             return res.status(404).json({ message: 'Voiture non trouvée' });
         }
         
+        const currentCar = carCheck[0];
+        
         // Récupération de l'ID de la marque à partir du nom si fourni
-        let IdMarque = null;
+        let updateBrandId = null;
         if (NomMarque) {
-            const [brandRows] = await db.promise().query(
-                'SELECT IdMarque FROM MarqueVoiture WHERE NomMarque = ?',
-                [NomMarque]
+            // Si c'est un nombre, utiliser directement
+            if (!isNaN(NomMarque)) {
+                updateBrandId = parseInt(NomMarque);
+            } else {
+                // Sinon chercher par nom
+                const [brandRows] = await db.promise().query(
+                    'SELECT IdMarque FROM MarqueVoiture WHERE NomMarque = ?',
+                    [NomMarque]
+                );
+                
+                if (brandRows.length === 0) {
+                    return res.status(400).json({ 
+                        message: 'Marque invalide',
+                        brand: NomMarque
+                    });
+                }
+                
+                updateBrandId = brandRows[0].IdMarque;
+            }
+        }
+        
+        // Récupération de l'ID du type
+        let newTypeId = null;
+        if (Type) {
+            // Si c'est un nombre, utiliser directement
+            if (!isNaN(Type)) {
+                newTypeId = parseInt(Type);
+            } else {
+                // Sinon chercher par nom
+                const [typeResult] = await db.promise().query(
+                    'SELECT IdType FROM TypeVehicule WHERE NomType = ?',
+                    [Type]
+                );
+
+                if (typeResult.length === 0) {
+                    return res.status(400).json({ 
+                        message: 'Type de véhicule invalide',
+                        type: Type
+                    });
+                }
+
+                newTypeId = typeResult[0].IdType;
+            }
+        } else {
+            // Si aucun type n'est fourni, récupérer le type actuel
+            const [currentTypeResult] = await db.promise().query(
+                'SELECT IdType FROM Voiture WHERE IdVoiture = ?',
+                [carId]
             );
             
-            if (brandRows.length === 0) {
-                return res.status(404).json({ message: 'Marque non trouvée' });
+            if (currentTypeResult.length === 0) {
+                return res.status(404).json({ message: 'Voiture non trouvée' });
             }
             
-            IdMarque = brandRows[0].IdMarque;
+            newTypeId = currentTypeResult[0].IdType;
         }
+
+        // Debug logging
+        console.log('Brand ID:', updateBrandId);
+        console.log('Type ID:', newTypeId);
         
         // Construction de la requête de mise à jour dynamiquement selon les champs fournis
         let updateQuery = 'UPDATE Voiture SET ';
         const updateValues = [];
         
-        if (Modele) {
-            updateQuery += 'Modele = ?, ';
-            updateValues.push(Modele);
+        // Vérifier chaque champ et l'ajouter à la requête si nécessaire
+        const fieldsToCheck = [
+            { name: 'Modele', value: Modele, current: currentCar.Modele, type: 'string' },
+            { name: 'Annee', value: Annee, current: currentCar.Annee, type: 'int' },
+            { name: 'PrixLocation', value: PrixLocation, current: currentCar.PrixLocation, type: 'float' },
+            { name: 'IdStatut', value: IdStatut, current: currentCar.IdStatut, type: 'string' },
+            { name: 'IdMarque', value: updateBrandId, current: currentCar.IdMarque, type: 'int' },
+            { name: 'NbPorte', value: NbPorte, current: currentCar.NbPorte, type: 'int' },
+            { name: 'BoiteVitesse', value: BoiteVitesse, current: currentCar.BoiteVitesse, type: 'string' },
+            { name: 'Couleur', value: Couleur, current: currentCar.Couleur, type: 'string' },
+            { name: 'Energie', value: Energie, current: currentCar.Energie, type: 'string' },
+            { name: 'Puissance', value: Puissance, current: currentCar.Puissance, type: 'int' },
+            { name: 'NbPlaces', value: NbPlaces, current: currentCar.NbPlaces, type: 'int' },
+            { name: 'Description', value: Description, current: currentCar.Description, type: 'string' },
+            { name: 'Photo', value: Photo, current: currentCar.Photo, type: 'string' },
+            { name: 'IdType', value: newTypeId, current: currentCar.IdType, type: 'int' }
+        ];
+
+        for (const field of fieldsToCheck) {
+            if (field.value !== undefined && field.value !== null) {
+                let shouldUpdate = false;
+                
+                switch (field.type) {
+                    case 'int':
+                        shouldUpdate = parseInt(field.value) !== parseInt(field.current);
+                        break;
+                    case 'float':
+                        shouldUpdate = Math.abs(parseFloat(field.value) - parseFloat(field.current)) > 0.001;
+                        break;
+                    case 'string':
+                        shouldUpdate = field.value.toString() !== field.current.toString();
+                        break;
+                }
+
+                if (shouldUpdate) {
+                    updateQuery += `${field.name} = ?, `;
+                    updateValues.push(field.value);
+                }
+            }
         }
-        
-        if (Annee) {
-            updateQuery += 'Annee = ?, ';
-            updateValues.push(Annee);
+
+        // Si aucun champ n'a changé, retourner un message approprié
+        if (updateValues.length === 0) {
+            // Récupérer le type actuel
+            const [typeResult] = await db.promise().query(
+                'SELECT NomType FROM TypeVehicule WHERE IdType = ?',
+                [currentCar.IdType]
+            );
+            
+            return res.status(200).json({ 
+                message: 'Aucune modification nécessaire - les valeurs sont identiques',
+                currentValues: {
+                    ...currentCar,
+                    Type: typeResult[0]?.NomType || null
+                }
+            });
         }
-        
-        if (PrixLocation) {
-            updateQuery += 'PrixLocation = ?, ';
-            updateValues.push(PrixLocation);
-        }
-        
-        if (IdStatut) {
-            updateQuery += 'IdStatut = ?, ';
-            updateValues.push(IdStatut);
-        }
-        
-        if (IdMarque) {
-            updateQuery += 'IdMarque = ?, ';
-            updateValues.push(IdMarque);
-        }
-        
-        if (NbPorte) {
-            updateQuery += 'NbPorte = ?, ';
-            updateValues.push(NbPorte);
-        }
-        
-        if (BoiteVitesse) {
-            updateQuery += 'BoiteVitesse = ?, ';
-            updateValues.push(BoiteVitesse);
-        }
-        
-        if (Couleur) {
-            updateQuery += 'Couleur = ?, ';
-            updateValues.push(Couleur);
-        }
-        
-        if (Energie) {
-            updateQuery += 'Energie = ?, ';
-            updateValues.push(Energie);
-        }
-        
-        if (Puissance) {
-            updateQuery += 'Puissance = ?, ';
-            updateValues.push(Puissance);
-        }
-        
-        if (NbPlaces) {
-            updateQuery += 'NbPlaces = ?, ';
-            updateValues.push(NbPlaces);
-        }
-        
-        if (Description) {
-            updateQuery += 'Description = ?, ';
-            updateValues.push(Description);
-        }
-        
-        // Gestion de la mise à jour de la photo
-        if (Photo !== undefined) {
-            updateQuery += 'Photo = ?, ';
-            // Utilisation de l'URL fournie ou de la valeur par défaut si vide
-            const photoUrl = Photo && Photo.trim() !== '' 
-                ? Photo 
-                : 'assets/images/default-car.jpg';
-            updateValues.push(photoUrl);
-        }
-        
+
         // Suppression de la virgule finale et ajout de la clause WHERE
         updateQuery = updateQuery.slice(0, -2) + ' WHERE IdVoiture = ?';
         updateValues.push(carId);
         
+        // Debug logging
+        console.log('Update Query:', updateQuery);
+        console.log('Update Values:', updateValues);
+        
         // Exécution de la requête de mise à jour
-        await db.promise().query(updateQuery, updateValues);
+        const [updateResult] = await db.promise().query(updateQuery, updateValues);
+        console.log('Update Result:', updateResult);
+        
+        // Vérification si la mise à jour a affecté des lignes
+        if (updateResult.affectedRows === 0) {
+            return res.status(400).json({ 
+                message: 'Aucune modification effectuée',
+                query: updateQuery,
+                values: updateValues
+            });
+        }
+        
+        // Récupérer les données mises à jour
+        const [updatedCar] = await db.promise().query(
+            'SELECT v.*, m.NomMarque, t.NomType FROM Voiture v ' +
+            'JOIN MarqueVoiture m ON v.IdMarque = m.IdMarque ' +
+            'JOIN TypeVehicule t ON v.IdType = t.IdType ' +
+            'WHERE v.IdVoiture = ?',
+            [carId]
+        );
         
         console.log(`Voiture ${carId} mise à jour avec succès`);
-        res.json({ message: 'Voiture mise à jour avec succès' });
+        res.json({ 
+            message: 'Voiture mise à jour avec succès',
+            affectedRows: updateResult.affectedRows,
+            updatedCar: updatedCar[0]
+        });
     } catch (error) {
         console.error('Erreur lors de la mise à jour de la voiture:', error);
         res.status(500).json({ 

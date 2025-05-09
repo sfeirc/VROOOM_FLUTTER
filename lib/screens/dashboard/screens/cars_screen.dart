@@ -1044,13 +1044,37 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                       // Espacement vertical
                                       const SizedBox(height: 16),
                                       
+                                      // Type de véhicule
+                                      DropdownButtonFormField<String>(
+                                        value: selectedType,
+                                        decoration: InputDecoration(
+                                          labelText: 'Type de véhicule',
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          fillColor: Colors.white,
+                                          filled: true,
+                                          prefixIcon: const Icon(Icons.category),
+                                        ),
+                                        items: _types.map((type) => DropdownMenuItem(
+                                          value: type,
+                                          child: Text(type),
+                                        )).toList(),
+                                        onChanged: (value) {
+                                          selectedType = value;
+                                        },
+                                        validator: (value) => value == null ? 'Veuillez sélectionner un type' : null,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      
+                                      // Transmission
                                       DropdownButtonFormField<String>(
                                         // Valeur sélectionnée
-                                        value: selectedType,
+                                        value: selectedTransmission,
                                         // Décoration
                                         decoration: InputDecoration(
                                           // Texte du label
-                                          labelText: 'Type de véhicule',
+                                          labelText: 'Boîte de vitesse',
                                           // Bordure
                                           border: OutlineInputBorder(
                                             // Rayon de la bordure
@@ -1061,21 +1085,22 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                           // Couleur de fond
                                           filled: true,
                                           // Icône
-                                          prefixIcon: const Icon(Icons.category),
+                                          prefixIcon: const Icon(Icons.settings),
                                         ),
-                                        items: _types.map((type) => DropdownMenuItem(
-                                          // Valeur sélectionnée
-                                          value: type,
-                                          // Contenu du menu
-                                          child: Text(type),
-                                        )).toList(),
+                                        // Items
+                                        items: const [
+                                          // DropdownMenuItem
+                                          DropdownMenuItem(value: 'Automatique', child: Text('Automatique')),
+                                          // DropdownMenuItem
+                                          DropdownMenuItem(value: 'Manuelle', child: Text('Manuelle')),
+                                          // DropdownMenuItem
+                                          DropdownMenuItem(value: 'PDK', child: Text('PDK')),
+                                        ],
                                         // Action du bouton
                                         onChanged: (value) {
                                           // Texte du contrôleur
-                                          selectedType = value;
+                                          selectedTransmission = value;
                                         },
-                                        // Validation
-                                        validator: (value) => value == null ? 'Veuillez sélectionner un type' : null,
                                       ),
                                     ],
                                   ),
@@ -1300,11 +1325,11 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                       // DropdownButtonFormField
                                       DropdownButtonFormField<String>(
                                         // Valeur sélectionnée
-                                        value: selectedTransmission,
+                                        value: selectedEnergy,
                                         // Décoration
                                         decoration: InputDecoration(
                                           // Texte du label
-                                          labelText: 'Boîte de vitesse',
+                                          labelText: 'Énergie',
                                           // Bordure
                                           border: OutlineInputBorder(
                                             // Rayon de la bordure
@@ -1315,21 +1340,22 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                           // Couleur de fond
                                           filled: true,
                                           // Icône
-                                          prefixIcon: const Icon(Icons.settings),
+                                          prefixIcon: const Icon(Icons.local_gas_station),
                                         ),
                                         // Items
                                         items: const [
                                           // DropdownMenuItem
-                                          DropdownMenuItem(value: 'Automatique', child: Text('Automatique')),
+                                          DropdownMenuItem(value: 'Essence', child: Text('Essence')),
                                           // DropdownMenuItem
-                                          DropdownMenuItem(value: 'Manuelle', child: Text('Manuelle')),
+                                          DropdownMenuItem(value: 'Diesel', child: Text('Diesel')),
                                           // DropdownMenuItem
-                                          DropdownMenuItem(value: 'PDK', child: Text('PDK')),
+                                          DropdownMenuItem(value: 'Électrique', child: Text('Électrique')),
+                                          // DropdownMenuItem
+                                          DropdownMenuItem(value: 'Hybride', child: Text('Hybride')),
                                         ],
-                                        // Action du bouton
                                         onChanged: (value) {
                                           // Texte du contrôleur
-                                          selectedTransmission = value;
+                                          selectedEnergy = value;
                                         },
                                       ),
                                       const SizedBox(height: 16),
@@ -1369,11 +1395,11 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                       // DropdownButtonFormField
                                       DropdownButtonFormField<String>(
                                         // Valeur sélectionnée
-                                        value: selectedEnergy,
+                                        value: selectedTransmission,
                                         // Décoration
                                         decoration: InputDecoration(
                                           // Texte du label
-                                          labelText: 'Énergie',
+                                          labelText: 'Boîte de vitesse',
                                           // Bordure
                                           border: OutlineInputBorder(
                                             // Rayon de la bordure
@@ -1384,22 +1410,21 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                           // Couleur de fond
                                           filled: true,
                                           // Icône
-                                          prefixIcon: const Icon(Icons.local_gas_station),
+                                          prefixIcon: const Icon(Icons.settings),
                                         ),
                                         // Items
                                         items: const [
                                           // DropdownMenuItem
-                                          DropdownMenuItem(value: 'Essence', child: Text('Essence')),
+                                          DropdownMenuItem(value: 'Automatique', child: Text('Automatique')),
                                           // DropdownMenuItem
-                                          DropdownMenuItem(value: 'Diesel', child: Text('Diesel')),
+                                          DropdownMenuItem(value: 'Manuelle', child: Text('Manuelle')),
                                           // DropdownMenuItem
-                                          DropdownMenuItem(value: 'Électrique', child: Text('Électrique')),
-                                          // DropdownMenuItem
-                                          DropdownMenuItem(value: 'Hybride', child: Text('Hybride')),
+                                          DropdownMenuItem(value: 'PDK', child: Text('PDK')),
                                         ],
+                                        // Action du bouton
                                         onChanged: (value) {
                                           // Texte du contrôleur
-                                          selectedEnergy = value;
+                                          selectedTransmission = value;
                                         },
                                       ),
                                       const SizedBox(height: 16),
@@ -1577,6 +1602,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                               'IdStatut': selectedStatus,
                               'BoiteVitesse': selectedTransmission,
                               'Energie': selectedEnergy,
+                              'Type': selectedType,
                               'Couleur': colorController.text,
                               'NbPorte': int.parse(doorsController.text),
                               'NbPlaces': int.parse(seatsController.text),
@@ -1670,10 +1696,12 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
     String? selectedBrand = car['NomMarque'];
     // Statut sélectionné
     String? selectedStatus = car['IdStatut'];
-    // Transmission sélectionnée
-    String? selectedEnergy = car['Energie'] ?? 'Essence';
+    // Type sélectionné
+    String? selectedType = car['Type'];
     // Transmission sélectionnée
     String? selectedTransmission = car['BoiteVitesse'] ?? 'Automatique';
+    // Énergie sélectionnée
+    String? selectedEnergy = car['Energie'] ?? 'Essence';
     // Afficher le dialogue 
     showDialog(
       context: context,
@@ -1816,6 +1844,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                 color: Colors.blue.shade800,
                               ),
                             ),
+                            // Espacement vertical
                             const SizedBox(height: 16),
                             
                             // Layout
@@ -1946,10 +1975,35 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                       const SizedBox(height: 16),
                                       
                                       DropdownButtonFormField<String>(
-                                        value: selectedStatus,
+                                        value: selectedType,
                                         decoration: InputDecoration(
-                                          // Texte
-                                          labelText: 'Statut',
+                                          labelText: 'Type de véhicule',
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          fillColor: Colors.white,
+                                          filled: true,
+                                          prefixIcon: const Icon(Icons.category),
+                                        ),
+                                        items: _types.map((type) => DropdownMenuItem(
+                                          value: type,
+                                          child: Text(type),
+                                        )).toList(),
+                                        onChanged: (value) {
+                                          selectedType = value;
+                                        },
+                                        validator: (value) => value == null ? 'Veuillez sélectionner un type' : null,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      
+                                      // Transmission
+                                      DropdownButtonFormField<String>(
+                                        // Valeur sélectionnée
+                                        value: selectedTransmission,
+                                        // Décoration
+                                        decoration: InputDecoration(
+                                          // Texte du label
+                                          labelText: 'Boîte de vitesse',
                                           // Bordure
                                           border: OutlineInputBorder(
                                             // Rayon de la bordure
@@ -1960,17 +2014,21 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                           // Couleur de fond
                                           filled: true,
                                           // Icône
-                                          prefixIcon: const Icon(Icons.info_outline),
+                                          prefixIcon: const Icon(Icons.settings),
                                         ),
+                                        // Items
                                         items: const [
-                                          // Item
-                                          DropdownMenuItem(value: 'STAT001', child: Text('Disponible')),
-                                          DropdownMenuItem(value: 'STAT002', child: Text('Loué')),
-                                          DropdownMenuItem(value: 'STAT003', child: Text('Maintenance')),
+                                          // DropdownMenuItem
+                                          DropdownMenuItem(value: 'Automatique', child: Text('Automatique')),
+                                          // DropdownMenuItem
+                                          DropdownMenuItem(value: 'Manuelle', child: Text('Manuelle')),
+                                          // DropdownMenuItem
+                                          DropdownMenuItem(value: 'PDK', child: Text('PDK')),
                                         ],
+                                        // Action du bouton
                                         onChanged: (value) {
-                                          // Statut
-                                          selectedStatus = value;
+                                          // Texte du contrôleur
+                                          selectedTransmission = value;
                                         },
                                       ),
                                     ],
@@ -2410,6 +2468,8 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                               'BoiteVitesse': selectedTransmission,
                               // Énergie
                               'Energie': selectedEnergy,
+                              // Type
+                              'Type': selectedType,
                               // Couleur
                               'Couleur': colorController.text,
                               // Nombre de portes
