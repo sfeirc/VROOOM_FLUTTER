@@ -4,6 +4,8 @@ import '../../../services/api_service.dart';
 import 'dart:async';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
+import 'dart:convert';
 
 // Écran des voitures
 class CarsScreen extends StatefulWidget {
@@ -40,6 +42,8 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
   final TextEditingController doorsController = TextEditingController();
   final TextEditingController seatsController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController imageUrlController = TextEditingController();
+  final List<TextEditingController> additionalImagesControllers = [];
 
   @override
   void initState() {
@@ -550,7 +554,12 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                     ),
                                     cells: [
                                       // Génère les cellules du tableau
-                                      DataCell(_buildCarImage(car)),
+                                      DataCell(
+                                        InkWell(
+                                          onTap: () => _showCarDetails(car),
+                                          child: _buildCarImage(car),
+                                        )
+                                      ),
                                       // Génère les cellules du tableau
                                       DataCell(
                                         Text(
@@ -1180,8 +1189,8 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                     if (imageUrlController.text.isNotEmpty) {
                                       // Utiliser notre proxy pour éviter les problèmes de CORS
                                       final proxyUrl = imageUrlController.text.startsWith('http')
-                                        ? 'http://172.16.199.254:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrlController.text)}'
-                                        : 'http://172.16.199.254:3000/${imageUrlController.text}';
+                                        ? 'http://localhost:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrlController.text)}'
+                                        : 'http://localhost:3000/${imageUrlController.text}';
                                       
                                       showDialog(
                                         context: context,
@@ -1611,6 +1620,10 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                 ? descriptionController.text
                                 : '${brandController.text} ${modelController.text}',
                               'Photo': imageUrlController.text,
+                              'PhotosSupplementaires': additionalImagesControllers
+                                .map((controller) => controller.text)
+                                .where((url) => url.isNotEmpty)
+                                .toList(),
                             };
                             
                             await _apiService.createCar(carData);
@@ -1692,6 +1705,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
     final descriptionController = TextEditingController(text: car['Description'] ?? '');
     // Contrôleur de l'URL de l'image
     final imageUrlController = TextEditingController(text: car['Photo'] ?? '');
+    
     // Marque sélectionnée
     String? selectedBrand = car['NomMarque'];
     // Statut sélectionné
@@ -1702,6 +1716,36 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
     String? selectedTransmission = car['BoiteVitesse'] ?? 'Automatique';
     // Énergie sélectionnée
     String? selectedEnergy = car['Energie'] ?? 'Essence';
+    
+    // Contrôleurs pour les images supplémentaires
+    List<TextEditingController> additionalImagesControllers = [];
+    
+    // Récupérer les photos supplémentaires s'il y en a
+    if (car['PhotosSupplementaires'] != null) {
+      List<dynamic> photos = [];
+      if (car['PhotosSupplementaires'] is String) {
+        // Si c'est une chaîne JSON, la parser
+        try {
+          photos = json.decode(car['PhotosSupplementaires']);
+        } catch (e) {
+          print('Erreur lors du décodage des photos supplémentaires: $e');
+        }
+      } else if (car['PhotosSupplementaires'] is List) {
+        photos = car['PhotosSupplementaires'];
+      }
+      
+      if (photos.isNotEmpty) {
+        for (var photoUrl in photos) {
+          additionalImagesControllers.add(TextEditingController(text: photoUrl.toString()));
+        }
+      }
+    }
+    
+    // S'il n'y a pas d'images supplémentaires, ajouter un contrôleur vide
+    if (additionalImagesControllers.isEmpty) {
+      additionalImagesControllers.add(TextEditingController());
+    }
+    
     // Afficher le dialogue 
     showDialog(
       context: context,
@@ -1851,6 +1895,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                             Row(
                               // Alignement du texte
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              // Contenu de la colonne
                               children: [
                                 // Colonne gauche
                                 Expanded(
@@ -1858,7 +1903,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                     // Contenu de la colonne
                                     children: [
                                       DropdownButtonFormField<String>(
-                                        value: selectedBrand,
+                                        value: _brands.isNotEmpty ? _brands[0] : null,
                                         decoration: InputDecoration(
                                           labelText: 'Marque',
                                           border: OutlineInputBorder(
@@ -2102,14 +2147,14 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                 suffixIcon: IconButton(
                                   // Icône
                                   icon: const Icon(Icons.preview),
-                                  // Texte
+                                  // Texte du tooltip
                                   tooltip: 'Prévisualiser',
                                   onPressed: () {
                                     if (imageUrlController.text.isNotEmpty) {
                                       // Utiliser notre proxy pour éviter les problèmes de CORS
                                       final proxyUrl = imageUrlController.text.startsWith('http')
-                                        ? 'http://172.16.199.254:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrlController.text)}'
-                                        : 'http://172.16.199.254:3000/${imageUrlController.text}';
+                                        ? 'http://localhost:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrlController.text)}'
+                                        : 'http://localhost:3000/${imageUrlController.text}';
                                       // Afficher le dialogue
                                       showDialog(
                                         // Contexte
@@ -2214,6 +2259,158 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                       
                       const SizedBox(height: 20),
                       
+                      // Section des photos supplémentaires
+                      StatefulBuilder(
+                        builder: (context, setState) {
+                          return Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Photos supplémentaires',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue.shade800,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add_circle, color: Colors.green),
+                                      tooltip: 'Ajouter une photo',
+                                      onPressed: () {
+                                        setState(() {
+                                          additionalImagesControllers.add(TextEditingController());
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: additionalImagesControllers.length,
+                                  itemBuilder: (context, index) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 8.0),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller: additionalImagesControllers[index],
+                                              decoration: InputDecoration(
+                                                labelText: 'URL de l\'image ${index + 1}',
+                                                hintText: 'https://example.com/image.jpg',
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                fillColor: Colors.white,
+                                                filled: true,
+                                                prefixIcon: const Icon(Icons.image),
+                                              ),
+                                              keyboardType: TextInputType.url,
+                                            ),
+                                          ),
+                                          Row(
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.preview, color: Colors.blue),
+                                                tooltip: 'Prévisualiser',
+                                                onPressed: () {
+                                                  if (additionalImagesControllers[index].text.isNotEmpty) {
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (context) => Dialog(
+                                                        child: Column(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            AppBar(
+                                                              title: const Text('Prévisualisation'),
+                                                              centerTitle: true,
+                                                              leading: IconButton(
+                                                                icon: const Icon(Icons.close),
+                                                                onPressed: () => Navigator.pop(context),
+                                                              ),
+                                                            ),
+                                                            Expanded(
+                                                              child: Image.network(
+                                                                _getImageUrl(additionalImagesControllers[index].text),
+                                                                fit: BoxFit.contain,
+                                                                loadingBuilder: (context, child, loadingProgress) {
+                                                                  if (loadingProgress == null) return child;
+                                                                  return Center(
+                                                                    child: CircularProgressIndicator(
+                                                                      value: loadingProgress.expectedTotalBytes != null
+                                                                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                                          : null,
+                                                                    ),
+                                                                  );
+                                                                },
+                                                                errorBuilder: (context, error, stackTrace) {
+                                                                  return Column(
+                                                                    mainAxisSize: MainAxisSize.min,
+                                                                    children: [
+                                                                      const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                                                                      const SizedBox(height: 16),
+                                                                      const Text('Erreur de chargement de l\'image'),
+                                                                      Text(
+                                                                        error.toString().substring(0, error.toString().length > 100 ? 100 : error.toString().length),
+                                                                        style: const TextStyle(fontSize: 12),
+                                                                        textAlign: TextAlign.center,
+                                                                      ),
+                                                                    ],
+                                                                  );
+                                                                },
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.delete, color: Colors.red),
+                                                tooltip: 'Supprimer',
+                                                onPressed: () {
+                                                  setState(() {
+                                                    additionalImagesControllers.removeAt(index);
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                                if (additionalImagesControllers.isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Aucune photo supplémentaire. Cliquez sur le + pour en ajouter.',
+                                      style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        }
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
                       // Section des détails
                       Container(
                         // Padding
@@ -2260,8 +2457,9 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                       DropdownButtonFormField<String>(
                                         // Valeur
                                         value: selectedTransmission,
+                                        // Décoration
                                         decoration: InputDecoration(
-                                          // Texte
+                                          // Texte du label
                                           labelText: 'Boîte de vitesse',
                                           // Bordure
                                           border: OutlineInputBorder(
@@ -2484,6 +2682,10 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                 : '${selectedBrand} ${modelController.text}',
                               // URL de l'image
                               'Photo': imageUrlController.text,
+                              'PhotosSupplementaires': additionalImagesControllers
+                                .map((controller) => controller.text)
+                                .where((url) => url.isNotEmpty)
+                                .toList(),
                             };
                             
                             // Mettre à jour les données du véhicule
@@ -2872,28 +3074,595 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
     
     // Si l'URL est vide ou null, retourner une image par défaut
     if (imageUrl == null || imageUrl.isEmpty) {
-      return 'http://172.16.199.254:3000/api/assets/images/default-car.jpg';
+      return 'http://localhost:3000/api/assets/images/default-car.jpg';
     }
     
     // Gérer les URLs de motor1.com via notre proxy pour résoudre les problèmes de CORS
     if (imageUrl.contains('cdn.motor1.com')) {
       print('Utilisation du proxy pour l\'URL de motor1.com: $imageUrl');
-      return 'http://172.16.199.254:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrl)}';
+      return 'http://localhost:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrl)}';
     }
     // Gérer les autres URLs externes
     else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       print('Utilisation du proxy pour l\'URL externe: $imageUrl');
-      return 'http://172.16.199.254:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrl)}';
+      return 'http://localhost:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrl)}';
     } 
     // Gérer les chemins locaux
     else if (imageUrl.startsWith('assets/')) {
       print('Utilisation du chemin local: $imageUrl');
-      return 'http://172.16.199.254:3000/$imageUrl';
+      return 'http://localhost:3000/$imageUrl';
     } 
     // Cas par défaut
     else {
       print('Utilisation du chemin par défaut: $imageUrl');
-      return 'http://172.16.199.254:3000/$imageUrl';
+      return 'http://localhost:3000/$imageUrl';
+    }
+  }
+
+  void _showAddCarDialog() {
+    // Réinitialise les contrôleurs
+    brandController.clear();
+    modelController.clear();
+    yearController.text = DateTime.now().year.toString();
+    colorController.text = 'Blanc';
+    priceController.clear();
+    powerController.text = '100';
+    doorsController.text = '4';
+    seatsController.text = '5';
+    descriptionController.clear();
+    imageUrlController.clear();
+    
+    // Réinitialise les contrôleurs d'images supplémentaires
+    additionalImagesControllers.clear();
+    additionalImagesControllers.add(TextEditingController());
+    
+    // Réinitialise les sélections
+    String? selectedBrand;
+    String? selectedStatus = 'STAT001'; // Disponible par défaut
+    String? selectedType;
+    String selectedTransmission = 'Automatique';
+    String selectedEnergy = 'Essence';
+    
+    // Affiche le dialogue
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ajouter un nouveau véhicule'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Champ pour l'URL de l'image
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'URL de l\'image principale',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: imageUrlController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'URL de l\'image',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Ce champ est requis';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Section pour les images supplémentaires
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Images supplémentaires',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add_circle, color: Colors.blue),
+                          onPressed: () {
+                            setState(() {
+                              additionalImagesControllers.add(TextEditingController());
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...additionalImagesControllers.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      var controller = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: controller,
+                                decoration: InputDecoration(
+                                  border: const OutlineInputBorder(),
+                                  hintText: 'URL de l\'image supplémentaire ${index + 1}',
+                                ),
+                              ),
+                            ),
+                            if (additionalImagesControllers.length > 1)
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle, color: Colors.red),
+                                onPressed: () {
+                                  setState(() {
+                                    additionalImagesControllers.removeAt(index);
+                                  });
+                                },
+                              ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                // Créer un objet de données de voiture
+                final carData = {
+                  'NomMarque': brandController.text,
+                  'Modele': modelController.text,
+                  'Annee': int.parse(yearController.text),
+                  'PrixLocation': double.parse(priceController.text),
+                  'IdStatut': selectedStatus,
+                  'BoiteVitesse': selectedTransmission,
+                  'Energie': selectedEnergy,
+                  'Type': selectedType,
+                  'Couleur': colorController.text,
+                  'NbPorte': int.parse(doorsController.text),
+                  'NbPlaces': int.parse(seatsController.text),
+                  'Puissance': powerController.text.isNotEmpty ? int.parse(powerController.text) : 100,
+                  'Description': descriptionController.text.isNotEmpty 
+                    ? descriptionController.text
+                    : '${brandController.text} ${modelController.text}',
+                  'Photo': imageUrlController.text,
+                  'PhotosSupplementaires': additionalImagesControllers
+                    .map((controller) => controller.text)
+                    .where((url) => url.isNotEmpty)
+                    .toList(),
+                };
+                
+                await _apiService.createCar(carData);
+                
+                // Fermer le dialogue et actualiser les données
+                if (mounted) {
+                  // Fermer le dialogue
+                  Navigator.pop(context);
+                  // Actualiser les données
+                  _loadData();
+                  // Afficher un SnackBar
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      // Contenu
+                      content: Row(
+                        // Contenu de la colonne
+                        children: [
+                          // Icône
+                          const Icon(Icons.check_circle, color: Colors.white),
+                          // Espacement horizontal
+                          const SizedBox(width: 16),
+                          // Texte
+                          const Text('Véhicule créé avec succès'),
+                        ],
+                      ),
+                      // Couleur de fond
+                      backgroundColor: Colors.green,
+                      // Comportement
+                      behavior: SnackBarBehavior.floating,
+                      // Bordure
+                      shape: RoundedRectangleBorder(
+                        // Rayon de la bordure
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                }
+                // Afficher un SnackBar
+              } catch (e) {
+                final errorMessage = 'Erreur: ${e.toString()}';
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(errorMessage),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Créer le véhicule'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdditionalPhotosPreview(Map<String, dynamic> car) {
+    List<dynamic> photos = [];
+    
+    // Récupérer les photos supplémentaires
+    if (car['PhotosSupplementaires'] != null) {
+      if (car['PhotosSupplementaires'] is String) {
+        try {
+          photos = json.decode(car['PhotosSupplementaires'] as String);
+        } catch (e) {
+          print('Erreur lors du décodage des photos: $e');
+        }
+      } else if (car['PhotosSupplementaires'] is List) {
+        photos = car['PhotosSupplementaires'];
+      }
+    }
+    
+    if (photos.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    return Row(
+      children: [
+        Text(
+          '${photos.length} photo${photos.length > 1 ? 's' : ''} supplémentaire${photos.length > 1 ? 's' : ''}',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(width: 8),
+        ...photos.take(3).map((photoUrl) => Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.network(
+                _getImageUrl(photoUrl.toString()),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.image, size: 15, color: Colors.grey);
+                },
+              ),
+            ),
+          ),
+        )).toList(),
+        if (photos.length > 3)
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Center(
+              child: Text(
+                '+${photos.length - 3}',
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // Ajouter une méthode pour afficher les détails de la voiture
+  void _showCarDetails(Map<String, dynamic> car) {
+    final List<Tab> tabs = [
+      const Tab(text: 'Détails'),
+      const Tab(text: 'Photos'),
+    ];
+    
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).size.height * 0.8,
+          padding: const EdgeInsets.all(16),
+          child: DefaultTabController(
+            length: tabs.length,
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                automaticallyImplyLeading: false,
+                title: Text('${car['NomMarque']} ${car['Modele']}'),
+                bottom: TabBar(
+                  tabs: tabs,
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+              body: TabBarView(
+                children: [
+                  _buildDetailsTab(car),
+                  _buildPhotosTab(car),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildDetailsTab(Map<String, dynamic> car) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Photo principale
+          Center(
+            child: Container(
+              width: 200,
+              height: 150,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: _buildCarImage(car),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Détails de la voiture sous forme de tableau
+          Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Caractéristiques',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDetailRow('Marque', car['NomMarque'] ?? 'N/A'),
+                  _buildDetailRow('Modèle', car['Modele'] ?? 'N/A'),
+                  _buildDetailRow('Année', car['Annee']?.toString() ?? 'N/A'),
+                  _buildDetailRow('Type', car['Type'] ?? 'N/A'),
+                  _buildDetailRow('Prix de location', '${car['PrixLocation']} €/jour'),
+                  _buildDetailRow('Statut', _getStatusText(car['IdStatut'])),
+                  _buildDetailRow('Transmission', car['BoiteVitesse'] ?? 'N/A'),
+                  _buildDetailRow('Énergie', car['Energie'] ?? 'N/A'),
+                  _buildDetailRow('Couleur', car['Couleur'] ?? 'N/A'),
+                  _buildDetailRow('Nombre de portes', car['NbPorte']?.toString() ?? 'N/A'),
+                  _buildDetailRow('Nombre de places', car['NbPlaces']?.toString() ?? 'N/A'),
+                  _buildDetailRow('Puissance', '${car['Puissance']} ch'),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Description',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(car['Description'] ?? 'Aucune description disponible.'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildPhotosTab(Map<String, dynamic> car) {
+    List<String> allPhotos = [];
+    
+    // Ajouter la photo principale
+    if (car['Photo'] != null && car['Photo'].toString().trim().isNotEmpty) {
+      allPhotos.add(car['Photo'].toString());
+    }
+    
+    // Ajouter les photos supplémentaires
+    if (car['PhotosSupplementaires'] != null) {
+      List<dynamic> additionalPhotos = [];
+      if (car['PhotosSupplementaires'] is String) {
+        try {
+          additionalPhotos = json.decode(car['PhotosSupplementaires'].toString());
+        } catch (e) {
+          print('Erreur lors du décodage des photos supplémentaires: $e');
+        }
+      } else if (car['PhotosSupplementaires'] is List) {
+        additionalPhotos = car['PhotosSupplementaires'];
+      }
+      
+      for (var photo in additionalPhotos) {
+        if (photo != null && photo.toString().trim().isNotEmpty) {
+          allPhotos.add(photo.toString());
+        }
+      }
+    }
+    
+    if (allPhotos.isEmpty) {
+      return const Center(
+        child: Text('Aucune photo disponible'),
+      );
+    }
+    
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 1.5,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: allPhotos.length,
+      itemBuilder: (context, index) {
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: () {
+                _showFullScreenImage(context, allPhotos[index]);
+              },
+              child: Image.network(
+                _getImageUrl(allPhotos[index]),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Erreur de chargement',
+                          style: TextStyle(color: Colors.grey.shade700),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  void _showFullScreenImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.network(
+                _getImageUrl(imageUrl),
+                fit: BoxFit.contain,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Erreur de chargement de l\'image',
+                          style: TextStyle(color: Colors.grey.shade700, fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.black87),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  String _getStatusText(String? statusId) {
+    switch (statusId) {
+      case 'STAT001':
+        return 'Disponible';
+      case 'STAT002':
+        return 'Réservé';
+      case 'STAT003':
+        return 'En maintenance';
+      case 'STAT004':
+        return 'Hors service';
+      default:
+        return 'Inconnu';
     }
   }
 } 

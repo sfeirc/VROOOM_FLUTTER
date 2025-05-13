@@ -66,7 +66,7 @@ copy .env.example .env
 
 6. Modifiez le fichier `.env` avec vos informations :
 ```env
-DB_HOST=172.16.199.254
+DB_HOST=localhost
 DB_USER=votre_utilisateur
 DB_PASSWORD=votre_mot_de_passe
 DB_NAME=vroom_prestige

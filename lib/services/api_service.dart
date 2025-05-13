@@ -11,10 +11,10 @@ class ApiService {
   static String get baseUrl {
     if (kIsWeb) {
       // pour le web
-      return 'http://172.16.199.254:3000/api';
+      return 'http://localhost:3000/api';
     } else {
       // pour windows et autres plateformes, toujours utiliser la vm
-      return 'http://172.16.199.254:3000/api';
+      return 'http://localhost:3000/api';
     }
   }
   
@@ -418,7 +418,7 @@ class ApiService {
     }
   }
 
-  // Opérations CRUD sur les voitures
+  // Création d'une voiture
   Future<Map<String, dynamic>> createCar(Map<String, dynamic> carData) async {
     try {
       await _initHeaders();
@@ -444,6 +444,16 @@ class ApiService {
         carData['Puissance'] = int.parse(carData['Puissance'].toString());
       }
       
+      // Assure que PhotosSupplementaires est une liste
+      if (carData.containsKey('PhotosSupplementaires') && carData['PhotosSupplementaires'] is String) {
+        // Si c'est une chaîne unique, la transformer en liste
+        if (carData['PhotosSupplementaires'].toString().trim().isNotEmpty) {
+          carData['PhotosSupplementaires'] = [carData['PhotosSupplementaires']];
+        } else {
+          carData['PhotosSupplementaires'] = [];
+        }
+      }
+
       final response = await http.post(
         Uri.parse('$baseUrl/admin/cars'),
         headers: {..._requestHeaders, 'Content-Type': 'application/json'},
@@ -485,6 +495,16 @@ class ApiService {
       
       if (carData.containsKey('Puissance') && carData['Puissance'] is String) {
         carData['Puissance'] = int.parse(carData['Puissance'].toString());
+      }
+      
+      // Assure que PhotosSupplementaires est une liste
+      if (carData.containsKey('PhotosSupplementaires') && carData['PhotosSupplementaires'] is String) {
+        // Si c'est une chaîne unique, la transformer en liste
+        if (carData['PhotosSupplementaires'].toString().trim().isNotEmpty) {
+          carData['PhotosSupplementaires'] = [carData['PhotosSupplementaires']];
+        } else {
+          carData['PhotosSupplementaires'] = [];
+        }
       }
       
       final response = await http.put(

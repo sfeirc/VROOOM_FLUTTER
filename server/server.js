@@ -22,7 +22,7 @@ require('dotenv').config();
 
 // Configuration de la base de données
 const dbConfig = {
-    host: '172.16.199.254',
+    host: 'localhost',
     port: 3306,
     user: 'root',
     password: 'clovis',
@@ -845,14 +845,15 @@ app.post('/api/admin/cars', authenticateSession, async (req, res) => {
             INSERT INTO Voiture (
                 Modele, NbPorte, BoiteVitesse, Annee, Couleur, 
                 Photo, Energie, Puissance, PrixLocation, Description,
-                NbPlaces, IdStatut, IdMarque, IdType
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                NbPlaces, IdStatut, IdMarque, IdType, PhotosSupplementaires
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             Modele, NbPorte || 4, BoiteVitesse || 'Automatique', 
             Annee, Couleur || 'Blanc', photoUrl, 
             Energie || 'Essence', Puissance || 100, PrixLocation,
             Description || `${IdMarque} ${Modele}`, NbPlaces || 5, 
-            IdStatut, updateBrandId, newTypeId
+            IdStatut, updateBrandId, newTypeId,
+            req.body.PhotosSupplementaires ? JSON.stringify(req.body.PhotosSupplementaires) : null
         ]);
         
         // Récupération de l'ID auto-généré
@@ -984,7 +985,8 @@ app.put('/api/admin/cars/:id', authenticateSession, async (req, res) => {
             { name: 'NbPlaces', value: NbPlaces, current: currentCar.NbPlaces, type: 'int' },
             { name: 'Description', value: Description, current: currentCar.Description, type: 'string' },
             { name: 'Photo', value: Photo, current: currentCar.Photo, type: 'string' },
-            { name: 'IdType', value: newTypeId, current: currentCar.IdType, type: 'int' }
+            { name: 'IdType', value: newTypeId, current: currentCar.IdType, type: 'int' },
+            { name: 'PhotosSupplementaires', value: req.body.PhotosSupplementaires, current: currentCar.PhotosSupplementaires ? JSON.parse(currentCar.PhotosSupplementaires) : null, type: 'json' }
         ];
 
         for (const field of fieldsToCheck) {
@@ -1001,11 +1003,23 @@ app.put('/api/admin/cars/:id', authenticateSession, async (req, res) => {
                     case 'string':
                         shouldUpdate = field.value.toString() !== field.current.toString();
                         break;
+                    case 'json':
+                        // For JSON fields like PhotosSupplementaires, compare as strings
+                        const currentValue = field.current ? JSON.stringify(field.current) : null;
+                        const newValue = field.value ? JSON.stringify(field.value) : null;
+                        shouldUpdate = currentValue !== newValue;
+                        break;
                 }
 
                 if (shouldUpdate) {
-                    updateQuery += `${field.name} = ?, `;
-                    updateValues.push(field.value);
+                    // Special handling for JSON fields
+                    if (field.type === 'json') {
+                        updateQuery += `${field.name} = ?, `;
+                        updateValues.push(JSON.stringify(field.value));
+                    } else {
+                        updateQuery += `${field.name} = ?, `;
+                        updateValues.push(field.value);
+                    }
                 }
             }
         }
@@ -1519,5 +1533,5 @@ app.get('*.jpg|*.jpeg|*.png|*.gif|*.svg', (req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveur démarré sur le port ${PORT}`);
-    console.log(`Accès à l'API sur http://172.16.199.254:${PORT}`);
+    console.log(`Accès à l'API sur http://localhost:${PORT}`);
 });
