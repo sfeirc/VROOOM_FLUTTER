@@ -11,10 +11,10 @@ class ApiService {
   static String get baseUrl {
     if (kIsWeb) {
       // pour le web
-      return 'http://localhost:3000/api';
+      return 'http://172.16.199.254:3000/api';
     } else {
       // pour windows et autres plateformes, toujours utiliser la vm
-      return 'http://localhost:3000/api';
+      return 'http://172.16.199.254:3000/api';
     }
   }
   
@@ -454,6 +454,51 @@ class ApiService {
         }
       }
 
+      // Si NomMarque est fourni mais pas IdMarque, obtenir l'ID de la marque
+      if (carData.containsKey('NomMarque') && !carData.containsKey('IdMarque')) {
+        final String brandName = carData['NomMarque'];
+        try {
+          final brands = await getBrands();
+          final matchingBrand = brands.firstWhere(
+            (brand) => brand['NomMarque'] == brandName,
+            orElse: () => {},
+          );
+          
+          if (matchingBrand.isNotEmpty && matchingBrand.containsKey('IdMarque')) {
+            carData['IdMarque'] = matchingBrand['IdMarque'];
+          } else {
+            throw Exception('Marque non trouvée: $brandName');
+          }
+        } catch (e) {
+          print('Erreur lors de la recherche de l\'ID de la marque: $e');
+          throw Exception('Impossible de trouver l\'ID de la marque: $brandName');
+        }
+        
+        // Supprimer NomMarque car le serveur attend IdMarque
+        carData.remove('NomMarque');
+      }
+      
+      // Gérer le Type en le convertissant en IdType
+      if (carData.containsKey('Type') && carData['Type'] != null) {
+        final String typeName = carData['Type'];
+        try {
+          final types = await getTypes();
+          final matchingType = types.firstWhere(
+            (type) => type['NomType'] == typeName,
+            orElse: () => {},
+          );
+          
+          if (matchingType.isNotEmpty && matchingType.containsKey('IdType')) {
+            carData['IdType'] = matchingType['IdType'];
+          } else {
+            throw Exception('Type non trouvé: $typeName');
+          }
+        } catch (e) {
+          print('Erreur lors de la recherche de l\'ID du type: $e');
+          throw Exception('Impossible de trouver l\'ID du type: $typeName');
+        }
+      }
+
       final response = await http.post(
         Uri.parse('$baseUrl/admin/cars'),
         headers: {..._requestHeaders, 'Content-Type': 'application/json'},
@@ -504,6 +549,51 @@ class ApiService {
           carData['PhotosSupplementaires'] = [carData['PhotosSupplementaires']];
         } else {
           carData['PhotosSupplementaires'] = [];
+        }
+      }
+      
+      // Si NomMarque est fourni mais pas IdMarque, obtenir l'ID de la marque
+      if (carData.containsKey('NomMarque') && !carData.containsKey('IdMarque')) {
+        final String brandName = carData['NomMarque'];
+        try {
+          final brands = await getBrands();
+          final matchingBrand = brands.firstWhere(
+            (brand) => brand['NomMarque'] == brandName,
+            orElse: () => {},
+          );
+          
+          if (matchingBrand.isNotEmpty && matchingBrand.containsKey('IdMarque')) {
+            carData['IdMarque'] = matchingBrand['IdMarque'];
+          } else {
+            throw Exception('Marque non trouvée: $brandName');
+          }
+        } catch (e) {
+          print('Erreur lors de la recherche de l\'ID de la marque: $e');
+          throw Exception('Impossible de trouver l\'ID de la marque: $brandName');
+        }
+        
+        // Supprimer NomMarque car le serveur attend IdMarque
+        carData.remove('NomMarque');
+      }
+      
+      // Gérer le Type en le convertissant en IdType
+      if (carData.containsKey('Type') && carData['Type'] != null) {
+        final String typeName = carData['Type'];
+        try {
+          final types = await getTypes();
+          final matchingType = types.firstWhere(
+            (type) => type['NomType'] == typeName,
+            orElse: () => {},
+          );
+          
+          if (matchingType.isNotEmpty && matchingType.containsKey('IdType')) {
+            carData['IdType'] = matchingType['IdType'];
+          } else {
+            throw Exception('Type non trouvé: $typeName');
+          }
+        } catch (e) {
+          print('Erreur lors de la recherche de l\'ID du type: $e');
+          throw Exception('Impossible de trouver l\'ID du type: $typeName');
         }
       }
       

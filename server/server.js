@@ -22,7 +22,7 @@ require('dotenv').config();
 
 // Configuration de la base de données
 const dbConfig = {
-    host: 'localhost',
+    host: '172.16.199.254',
     port: 3306,
     user: 'root',
     password: 'clovis',
@@ -198,7 +198,7 @@ db.getConnection((err, connection) => {
         console.error('Database connection error:', err);
         return;
     }
-    console.log('Successfully connected to database');
+    console.log('Connexion à la base de données réussie');
     connection.release();
 });
 
@@ -737,11 +737,11 @@ app.delete('/api/admin/reservations/:id', authenticateSession, async (req, res) 
             [reservationId]
         );
 
-        console.log(`Reservation ${reservationId} deleted successfully`);
-        res.json({ message: 'Reservation deleted successfully' });
+        console.log(`Réservation ${reservationId} supprimée avec succès`);
+        res.json({ message: 'Réservation supprimée avec succès' });
     } catch (error) {
-        console.error('Error deleting reservation:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Erreur lors de la suppression de la réservation:', error);
+        res.status(500).json({ message: 'Erreur serveur', error: error.message });
     }
 });
 
@@ -1533,5 +1533,5 @@ app.get('*.jpg|*.jpeg|*.png|*.gif|*.svg', (req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Serveur démarré sur le port ${PORT}`);
-    console.log(`Accès à l'API sur http://localhost:${PORT}`);
+    console.log(`Accès à l'API sur http://172.16.199.254:${PORT}`);
 });
