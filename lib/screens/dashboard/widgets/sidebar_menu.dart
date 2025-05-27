@@ -18,7 +18,7 @@ class SidebarMenu extends StatelessWidget {
       color: Colors.blue.shade900,
       child: Column(
         children: [
-          // Logo/Brand
+          // Logo/Marque
           Container(
             padding: const EdgeInsets.all(16),
             child: Text(
@@ -31,7 +31,7 @@ class SidebarMenu extends StatelessWidget {
             ),
           ),
           const Divider(color: Colors.white24),
-          // Menu Items
+          // Éléments du menu
           _buildMenuItem(
             index: 0,
             icon: Icons.dashboard,

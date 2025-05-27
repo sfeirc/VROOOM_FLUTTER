@@ -18,7 +18,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
   List<String> _brands = [];
   List<String> _types = [];
   
-  // Filters
+  // Filtres
   String? _selectedBrand;
   String? _selectedType;
   String _searchQuery = '';
@@ -46,7 +46,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
     _loadData();
   }
 
-  // Add debounce timer for search
+  // Ajouter un timer de debounce pour la recherche
   Timer? _debounce;
 
   @override
@@ -76,7 +76,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
       try {
         brands = await _apiService.getBrands();
       } catch (e) {
-        print('Error loading brands: $e');
+        print('Erreur lors du chargement des marques: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -92,7 +92,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
       try {
         types = await _apiService.getTypes();
       } catch (e) {
-        print('Error loading types: $e');
+        print('Erreur lors du chargement des types: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -117,7 +117,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
         _animationController.forward();
       }
     } catch (e) {
-      print('Error in _loadData: $e');
+      print('Erreur in _loadData: $e');
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -162,7 +162,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with filters
+            // En-tête avec filtres
             Container(
               padding: const EdgeInsets.all(20.0),
               margin: const EdgeInsets.only(bottom: 20.0),
@@ -302,7 +302,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
               ),
             ),
             
-            // Cars table
+            // Table des voitures
             Expanded(
               child: _isLoading
                   ? Center(
@@ -664,7 +664,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Basic info section
+                      // Informations de base
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -685,11 +685,11 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                             ),
                             const SizedBox(height: 16),
                             
-                            // Two columns layout
+                            // Disposition en deux colonnes
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Left column
+                                // Colonne de gauche
                                 Expanded(
                                   child: Column(
                                     children: [
@@ -749,7 +749,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                 
                                 const SizedBox(width: 16),
                                 
-                                // Right column
+                                // Colonne de droite
                                 Expanded(
                                   child: Column(
                                     children: [
@@ -816,7 +816,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                       
                       const SizedBox(height: 20),
                       
-                      // Image URL section
+                      // Section URL de l'image
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -886,7 +886,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                                     );
                                                   },
                                                   errorBuilder: (context, error, stackTrace) {
-                                                    print('Image preview error: $error');
+                                                    print('Erreur de prévisualisation de l\'image: $error');
                                                     return Column(
                                                       mainAxisSize: MainAxisSize.min,
                                                       children: [
@@ -927,7 +927,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                       
                       const SizedBox(height: 20),
                       
-                      // Details section
+                      // Section des détails
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -948,11 +948,11 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                             ),
                             const SizedBox(height: 16),
                             
-                            // Two columns layout
+                            // Disposition en deux colonnes
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Left column
+                                // Colonne de gauche
                                 Expanded(
                                   child: Column(
                                     children: [
@@ -997,7 +997,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                 
                                 const SizedBox(width: 16),
                                 
-                                // Right column
+                                // Colonne de droite
                                 Expanded(
                                   child: Column(
                                     children: [
@@ -1037,23 +1037,6 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                         ),
                                         keyboardType: TextInputType.number,
                                       ),
-                                      const SizedBox(height: 16),
-                                      
-                                      // Power/Puissance field
-                                      TextFormField(
-                                        controller: powerController,
-                                        decoration: InputDecoration(
-                                          labelText: 'Puissance (ch)',
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          fillColor: Colors.white,
-                                          filled: true,
-                                          prefixIcon: const Icon(Icons.speed),
-                                          helperText: 'Puissance moteur en chevaux',
-                                        ),
-                                        keyboardType: TextInputType.number,
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -1062,31 +1045,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                             
                             const SizedBox(height: 16),
                             
-                            // Status
-                            DropdownButtonFormField<String>(
-                              value: selectedStatus,
-                              decoration: InputDecoration(
-                                labelText: 'Statut',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                fillColor: Colors.white,
-                                filled: true,
-                                prefixIcon: const Icon(Icons.info_outline),
-                              ),
-                              items: const [
-                                DropdownMenuItem(value: 'STAT001', child: Text('Disponible')),
-                                DropdownMenuItem(value: 'STAT002', child: Text('Loué')),
-                                DropdownMenuItem(value: 'STAT003', child: Text('Maintenance')),
-                              ],
-                              onChanged: (value) {
-                                selectedStatus = value;
-                              },
-                            ),
-                            
-                            const SizedBox(height: 16),
-                            
-                            // Description
+                            // Description field - full width and larger
                             TextFormField(
                               controller: descriptionController,
                               decoration: InputDecoration(
@@ -1097,8 +1056,10 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                 fillColor: Colors.white,
                                 filled: true,
                                 prefixIcon: const Icon(Icons.description),
+                                helperText: 'Description détaillée du véhicule',
                               ),
-                              maxLines: 3,
+                              maxLines: 4,
+                              minLines: 4,
                             ),
                           ],
                         ),
@@ -1109,7 +1070,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                 
                 const SizedBox(height: 30),
                 
-                // Action buttons
+                // Boutons d'action
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -1307,7 +1268,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Basic info section
+                      // Informations de base
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -1328,11 +1289,11 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                             ),
                             const SizedBox(height: 16),
                             
-                            // Two columns layout
+                            // Disposition en deux colonnes
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Left column
+                                // Colonne de gauche
                                 Expanded(
                                   child: Column(
                                     children: [
@@ -1392,7 +1353,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                 
                                 const SizedBox(width: 16),
                                 
-                                // Right column
+                                // Colonne de droite
                                 Expanded(
                                   child: Column(
                                     children: [
@@ -1459,7 +1420,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                       
                       const SizedBox(height: 20),
                       
-                      // Image URL section
+                      // Section URL de l'image
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -1529,7 +1490,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                                     );
                                                   },
                                                   errorBuilder: (context, error, stackTrace) {
-                                                    print('Image preview error: $error');
+                                                    print('Erreur de prévisualisation de l\'image: $error');
                                                     return Column(
                                                       mainAxisSize: MainAxisSize.min,
                                                       children: [
@@ -1570,7 +1531,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                       
                       const SizedBox(height: 20),
                       
-                      // Details section
+                      // Section des détails
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -1591,11 +1552,11 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                             ),
                             const SizedBox(height: 16),
                             
-                            // Two columns layout
+                            // Disposition en deux colonnes
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Left column
+                                // Colonne de gauche
                                 Expanded(
                                   child: Column(
                                     children: [
@@ -1640,7 +1601,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                 
                                 const SizedBox(width: 16),
                                 
-                                // Right column
+                                // Colonne de droite
                                 Expanded(
                                   child: Column(
                                     children: [
@@ -1680,25 +1641,29 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                                         ),
                                         keyboardType: TextInputType.number,
                                       ),
-                                      const SizedBox(height: 16),
-                                      
-                                      TextFormField(
-                                        controller: descriptionController,
-                                        decoration: InputDecoration(
-                                          labelText: 'Description',
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          fillColor: Colors.white,
-                                          filled: true,
-                                          prefixIcon: const Icon(Icons.description),
-                                        ),
-                                        maxLines: 2,
-                                      ),
                                     ],
                                   ),
                                 ),
                               ],
+                            ),
+                            
+                            const SizedBox(height: 16),
+                            
+                            // Description field - full width and larger
+                            TextFormField(
+                              controller: descriptionController,
+                              decoration: InputDecoration(
+                                labelText: 'Description',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                fillColor: Colors.white,
+                                filled: true,
+                                prefixIcon: const Icon(Icons.description),
+                                helperText: 'Description détaillée du véhicule',
+                              ),
+                              maxLines: 4,
+                              minLines: 4,
                             ),
                           ],
                         ),
@@ -1709,7 +1674,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                 
                 const SizedBox(height: 30),
                 
-                // Action buttons
+                // Boutons d'action
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -1740,7 +1705,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                               'NomMarque': selectedBrand,
                               'Modele': modelController.text,
                               'Annee': int.parse(yearController.text),
-                              'PrixLocation': double.parse(priceController.text),
+                              'PrixLocation': double.parse(priceController.text.replaceAll(',', '.')),
                               'IdStatut': selectedStatus,
                               'BoiteVitesse': selectedTransmission,
                               'Energie': selectedEnergy,
@@ -1754,7 +1719,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                               'Photo': imageUrlController.text,
                             };
                             
-                            await _apiService.updateCar(car['IdVoiture'], carData);
+                            await _apiService.updateCar(car['IdVoiture'].toString(), carData);
                             
                             // Close dialog and refresh data
                             if (mounted) {
@@ -1778,24 +1743,22 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
                               );
                             }
                           } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: [
-                                      const Icon(Icons.error, color: Colors.white),
-                                      const SizedBox(width: 16),
-                                      Expanded(child: Text('Erreur: ${e.toString()}')),
-                                    ],
-                                  ),
-                                  backgroundColor: Colors.red,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Icon(Icons.error_outline, color: Colors.white),
+                                    const SizedBox(width: 16),
+                                    Text('Erreur: ${e.toString()}'),
+                                  ],
                                 ),
-                              );
-                            }
+                                backgroundColor: Colors.red,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            );
                           }
                         }
                       },
@@ -1939,7 +1902,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
     }
     
     final imageUrl = _getImageUrl(car['Photo'].toString());
-    print('Final image URL: $imageUrl');
+    print('Traitement de l\'URL de l\'image: $imageUrl');
     
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
@@ -1953,11 +1916,11 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Placeholder shown while loading
+            // Placeholder affiché pendant le chargement
             Center(
               child: _buildPlaceholderImage(car),
             ),
-            // Actual image
+            // Image réelle
             Image.network(
               imageUrl,
               fit: BoxFit.cover,
@@ -1966,7 +1929,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
               },
               cacheWidth: 100, // Smaller size to improve performance
               errorBuilder: (context, error, stackTrace) {
-                print('Error loading image: ${car['Photo']} - $error');
+                print('Erreur lors du chargement de l\'image: ${car['Photo']} - $error');
                 return _buildPlaceholderImage(car);
               },
               loadingBuilder: (context, child, loadingProgress) {
@@ -1988,7 +1951,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildPlaceholderImage(Map<String, dynamic> car) {
-    // Get make and model to display
+    // Obtenir la marque et le modèle à afficher
     final make = car['NomMarque'] as String? ?? '';
     final model = car['Modele'] as String? ?? '';
     final shortName = make.isNotEmpty ? make[0] + (model.isNotEmpty ? model[0] : '') : '?';
@@ -2047,31 +2010,31 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
 
   String _getImageUrl(String imageUrl) {
     // Log the original URL for debugging
-    print('Processing image URL: $imageUrl');
+    print('Traitement de l\'URL de l\'image: $imageUrl');
     
-    // If URL is empty or null, return a placeholder
+    // Si l'URL est vide ou nulle, retourner un placeholder
     if (imageUrl == null || imageUrl.isEmpty) {
       return 'http://localhost:3000/api/assets/images/default-car.jpg';
     }
     
-    // Handle motor1.com URLs through our proxy to fix CORS issues
+    // Gérer les URLs de motor1.com à travers notre proxy pour résoudre les problèmes CORS
     if (imageUrl.contains('cdn.motor1.com')) {
-      print('Using proxy for motor1.com URL: $imageUrl');
+      print('Utilisation du proxy pour l\'URL motor1.com: $imageUrl');
       return 'http://localhost:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrl)}';
     }
-    // Handle other external URLs
+    // Gérer les autres URLs externes
     else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      print('Using proxy for external URL: $imageUrl');
+      print('Utilisation du proxy pour l\'URL externe: $imageUrl');
       return 'http://localhost:3000/api/proxy-image?url=${Uri.encodeComponent(imageUrl)}';
     } 
-    // Handle local assets
+    // Gérer les ressources locales
     else if (imageUrl.startsWith('assets/')) {
-      print('Using local asset path: $imageUrl');
+      print('Utilisation du chemin d\'accès local: $imageUrl');
       return 'http://localhost:3000/$imageUrl';
     } 
-    // Default case
+    // Cas par défaut
     else {
-      print('Using default path: $imageUrl');
+      print('Utilisation du chemin par défaut: $imageUrl');
       return 'http://localhost:3000/$imageUrl';
     }
   }

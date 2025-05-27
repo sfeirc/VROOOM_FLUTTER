@@ -4,6 +4,11 @@ import 'providers/auth_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 
+// Point d'entrée principal de l'application
+// Configuration de l'application
+// Initialisation des services
+// Lancement de l'application
+
 void main() {
   runApp(const MyApp());
 }

@@ -27,7 +27,7 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
     try {
       setState(() => _isLoading = true);
       
-      // Load all required data in parallel
+      // Charger toutes les données requises en parallèle
       final futures = await Future.wait([
         _apiService.getReservations(),
         _apiService.getCars(),
@@ -69,7 +69,7 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search bar
+          // Barre de recherche
           Container(
             padding: const EdgeInsets.all(16.0),
             margin: const EdgeInsets.only(bottom: 16.0),
@@ -100,7 +100,7 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
           ),
           const SizedBox(height: 24),
           
-          // Reservations table
+          // Table des réservations
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -248,29 +248,29 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
     DateTime? startDate;
     DateTime? endDate;
 
-    // Helper to calculate price
+    // Fonction auxiliaire pour calculer le prix
     void calculatePrice() {
       if (selectedCarId != null && startDate != null && endDate != null) {
         try {
-          // Find the selected car
+          // Trouver la voiture sélectionnée
           final car = _cars.firstWhere((c) => c['IdVoiture'].toString() == selectedCarId);
           
-          // Get the daily price
+          // Obtenir le prix journalier
           final pricePerDay = double.tryParse(car['PrixLocation']?.toString() ?? '0') ?? 0.0;
           
-          // Calculate number of days (including start and end dates)
+          // Calculer le nombre de jours (incluant les dates de début et de fin)
           final days = endDate!.difference(startDate!).inDays + 1;
           
           if (days > 0) {
-            // Calculate total price
+            // Calculer le prix total
             final totalPrice = pricePerDay * days;
             
-            // Format with 2 decimal places
+            // Formater avec 2 chiffres après la virgule
             setState(() {
               montantController.text = totalPrice.toStringAsFixed(2);
             });
             
-            // Show feedback to user
+            // Afficher un retour utilisateur
             if (mounted) {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               ScaffoldMessenger.of(context).showSnackBar(
@@ -879,20 +879,20 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
     void calculatePrice() {
       if (selectedCarId != null && startDate != null && endDate != null) {
         try {
-          // Find the selected car
+          // Trouver la voiture sélectionnée
           final car = _cars.firstWhere((c) => c['IdVoiture'].toString() == selectedCarId);
           
-          // Get the daily price
+          // Obtenir le prix journalier
           final pricePerDay = double.tryParse(car['PrixLocation']?.toString() ?? '0') ?? 0.0;
           
-          // Calculate number of days (including start and end dates)
+          // Calculer le nombre de jours (incluant les dates de début et de fin)
           final days = endDate.difference(startDate).inDays + 1;
           
           if (days > 0) {
-            // Calculate total price
+            // Calculer le prix total
             final totalPrice = pricePerDay * days;
             
-            // Format with 2 decimal places
+            // Formater avec 2 chiffres après la virgule
             montantController.text = totalPrice.toStringAsFixed(2);
             
             print('Edit price calculated: $pricePerDay/day × $days days = $totalPrice€');

@@ -39,7 +39,8 @@ class _DashboardLayoutState extends State<DashboardLayout> {
     return Scaffold(
       body: Row(
         children: [
-          // Sidebar
+          // Mise en page du tableau de bord
+          // Barre latérale
           SidebarMenu(
             selectedIndex: _selectedIndex,
             onItemSelected: (index) {
@@ -53,7 +54,7 @@ class _DashboardLayoutState extends State<DashboardLayout> {
           Expanded(
             child: Column(
               children: [
-                // Top Bar
+                // En-tête
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(

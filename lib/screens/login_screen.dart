@@ -21,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   
-  // Initialize ApiService
+  // Initialiser ApiService
   final _apiService = ApiService();
 
   @override
@@ -42,29 +42,20 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Attempt login
-      final response = await _apiService.login(_emailController.text, _passwordController.text);
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.login(
+        _emailController.text,
+        _passwordController.text,
+      );
       
-      print('Login response: $response');
-      
-      if (response['success'] == true && response['user'] != null) {
-        final user = response['user'];
-        print('Login successful, user info: $user');
-        
-        // Set the auth state in the provider to avoid double login
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        await authProvider.setUserData(user);
-        
-        // Ensure session is properly synchronized
-        await _apiService.synchronizeSession();
-        
-        // Navigate to dashboard using named route
+      if (success) {
+        // Navigate to dashboard if login was successful
         if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/dashboard');
+          Navigator.pushReplacementNamed(context, '/dashboard');
         }
       } else {
         setState(() {
-          _errorMessage = 'Login failed: ${response['message'] ?? 'Unknown error'}';
+          _errorMessage = 'Login failed: Invalid credentials';
         });
       }
     } catch (e) {

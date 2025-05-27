@@ -1,9 +1,9 @@
-// This is a basic Flutter widget test.
+// Ceci est un test de widget Flutter de base.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Pour effectuer une interaction avec un widget dans votre test, utilisez l'utilitaire WidgetTester
+// du package flutter_test. Par exemple, vous pouvez envoyer des gestes de tap et de défilement.
+// Vous pouvez également utiliser WidgetTester pour trouver des widgets enfants dans l'arbre de widgets,
+// lire du texte et vérifier que les valeurs des propriétés des widgets sont correctes.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,18 +12,18 @@ import 'package:vrooom_lourd/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+    // Construire notre application et déclencher une frame
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
+    // Vérifier que notre compteur commence à 0
     expect(find.text('0'), findsOneWidget);
     expect(find.text('1'), findsNothing);
 
-    // Tap the '+' icon and trigger a frame.
+    // Taper sur l'icône '+' et déclencher une frame
     await tester.tap(find.byIcon(Icons.add));
     await tester.pump();
 
-    // Verify that our counter has incremented.
+    // Vérifier que notre compteur a été incrémenté
     expect(find.text('0'), findsNothing);
     expect(find.text('1'), findsOneWidget);
   });

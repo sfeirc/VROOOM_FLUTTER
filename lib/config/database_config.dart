@@ -1,3 +1,7 @@
+// Configuration de la base de données
+// Paramètres de connexion
+// URL de la base de données
+
 class DatabaseConfig {
   static const String host = 'localhost';
   static const int port = 3306;

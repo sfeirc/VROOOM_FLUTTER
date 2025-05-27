@@ -146,11 +146,14 @@ const sessionStore = new MySQLStore(options);
 // Middleware
 app.use(cors({
     origin: '*', // Allow all origins
-    credentials: true, // Important for sessions
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-User-Id', 'Cache-Control', 'Accept']
 }));
 app.use(express.json());
+
+// Add OPTIONS handling for the user update endpoint
+app.options('/api/admin/users/:id', cors());
 
 // Session middleware
 app.use(session({
@@ -949,87 +952,122 @@ app.post('/api/admin/users', authenticateSession, async (req, res) => {
 });
 
 // Update a user
-app.put('/api/admin/users/:id', authenticateSession, async (req, res) => {
+app.put('/api/admin/users/:id', cors(), authenticateSession, async (req, res) => {
     try {
+        // Log the incoming request
+        console.log('Received user update request:');
+        console.log('URL:', req.url);
+        console.log('Method:', req.method);
+        console.log('Headers:', req.headers);
+        console.log('Body:', req.body);
+        console.log('Params:', req.params);
+        
         // Check if user is admin
         if (req.session.user.role !== 'ADMIN' && req.session.user.role !== 'SUPERADMIN') {
-            return res.status(403).json({ message: 'Unauthorized' });
+            return res.status(403).json({ 
+                success: false,
+                message: 'Unauthorized' 
+            });
         }
         
         const userId = req.params.id;
-        const { Nom, Prenom, Email, Tel, MotDePasse, Role } = req.body;
+        const { Nom, Prenom, Email, Tel, MotDePasse, Role, Adresse } = req.body;
         
         console.log(`Updating user with ID: ${userId}`, req.body);
         
         // Check if user exists
         const [userCheck] = await db.promise().query(
-            'SELECT IdUser FROM Users WHERE IdUser = ?',
+            'SELECT IdUser, Email FROM Users WHERE IdUser = ?',
             [userId]
         );
         
         if (userCheck.length === 0) {
-            return res.status(404).json({ message: 'User not found' });
+            console.log(`User not found with ID: ${userId}`);
+            return res.status(404).json({ 
+                success: false,
+                message: 'User not found' 
+            });
         }
         
         // Check if email is being changed and already exists
-        if (Email) {
+        if (Email && Email !== userCheck[0].Email) {
             const [emailCheck] = await db.promise().query(
                 'SELECT Email FROM Users WHERE Email = ? AND IdUser != ?',
                 [Email, userId]
             );
             
             if (emailCheck.length > 0) {
-                return res.status(400).json({ message: 'Email already in use by another user' });
+                return res.status(400).json({ 
+                    success: false,
+                    message: 'Email already in use by another user' 
+                });
             }
         }
         
         // Build the update query dynamically based on provided fields
-        let updateQuery = 'UPDATE Users SET ';
+        const updateFields = [];
         const updateValues = [];
         
-        if (Nom) {
-            updateQuery += 'Nom = ?, ';
-            updateValues.push(Nom);
-        }
+        // Handle each field, including null values
+        if (Nom !== undefined) updateFields.push('Nom = ?') && updateValues.push(Nom);
+        if (Prenom !== undefined) updateFields.push('Prenom = ?') && updateValues.push(Prenom);
+        if (Email !== undefined) updateFields.push('Email = ?') && updateValues.push(Email);
+        if (Tel !== undefined) updateFields.push('Tel = ?') && updateValues.push(Tel);
+        if (Role !== undefined) updateFields.push('Role = ?') && updateValues.push(Role);
+        if (Adresse !== undefined) updateFields.push('Adresse = ?') && updateValues.push(Adresse);
         
-        if (Prenom) {
-            updateQuery += 'Prenom = ?, ';
-            updateValues.push(Prenom);
-        }
-        
-        if (Email) {
-            updateQuery += 'Email = ?, ';
-            updateValues.push(Email);
-        }
-        
-        if (Tel) {
-            updateQuery += 'Tel = ?, ';
-            updateValues.push(Tel);
-        }
-        
-        if (Role) {
-            updateQuery += 'Role = ?, ';
-            updateValues.push(Role);
-        }
-        
-        if (MotDePasse) {
+        // Handle password separately
+        if (MotDePasse !== undefined && MotDePasse.trim() !== '') {
             const hashedPassword = await bcrypt.hash(MotDePasse, 10);
-            updateQuery += 'MotDePasse = ?, ';
+            updateFields.push('MotDePasse = ?');
             updateValues.push(hashedPassword);
         }
         
-        // Remove trailing comma and add WHERE clause
-        updateQuery = updateQuery.slice(0, -2) + ' WHERE IdUser = ?';
+        // If no fields to update, return success
+        if (updateFields.length === 0) {
+            return res.json({ 
+                success: true,
+                message: 'No fields to update',
+                user: userCheck[0]
+            });
+        }
+        
+        // Build and execute the query
+        const updateQuery = `UPDATE Users SET ${updateFields.join(', ')} WHERE IdUser = ?`;
         updateValues.push(userId);
         
-        // Execute the update query
-        await db.promise().query(updateQuery, updateValues);
+        console.log('Update query:', updateQuery);
+        console.log('Update values:', updateValues);
+        
+        const [result] = await db.promise().query(updateQuery, updateValues);
+        
+        if (result.affectedRows === 0) {
+            console.log(`No rows affected when updating user ${userId}`);
+            return res.status(404).json({ 
+                success: false,
+                message: 'User not found or no changes made' 
+            });
+        }
+        
+        // Fetch the updated user data
+        const [updatedUser] = await db.promise().query(
+            'SELECT IdUser, Nom, Prenom, Email, Tel, Role, Adresse FROM Users WHERE IdUser = ?',
+            [userId]
+        );
         
         console.log(`User ${userId} updated successfully`);
-        res.json({ message: 'User updated successfully' });
+        res.json({ 
+            success: true,
+            message: 'User updated successfully',
+            user: updatedUser[0]
+        });
     } catch (error) {
         console.error('Error updating user:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ 
+            success: false,
+            message: 'Server error', 
+            error: error.message 
+        });
     }
 });
 
@@ -1098,6 +1136,100 @@ app.post('/api/admin/reservations', authenticateSession, async (req, res) => {
         });
     } catch (error) {
         console.error('Error creating reservation:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// Update a reservation (admin only)
+app.put('/api/admin/reservations/:id', authenticateSession, async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.session.user.role !== 'ADMIN' && req.session.user.role !== 'SUPERADMIN') {
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
+        
+        const reservationId = req.params.id;
+        const { IdUser, IdVoiture, DateDebut, DateFin, MontantReservation, Statut } = req.body;
+        
+        console.log(`Updating reservation with ID: ${reservationId}`, req.body);
+        
+        // Format dates to MySQL datetime format (YYYY-MM-DD HH:mm:ss)
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            return date.toISOString().slice(0, 19).replace('T', ' ');
+        };
+        
+        const formattedDateDebut = formatDate(DateDebut);
+        const formattedDateFin = formatDate(DateFin);
+        
+        console.log('Formatted dates:', { formattedDateDebut, formattedDateFin });
+        
+        // Check if reservation exists
+        const [reservationCheck] = await db.promise().query(
+            'SELECT IdReservation, IdVoiture, Statut FROM Reservation WHERE IdReservation = ?',
+            [reservationId]
+        );
+        
+        if (reservationCheck.length === 0) {
+            return res.status(404).json({ message: 'Reservation not found' });
+        }
+        
+        // Check if user exists
+        const [userCheck] = await db.promise().query(
+            'SELECT IdUser FROM Users WHERE IdUser = ?',
+            [IdUser]
+        );
+        
+        if (userCheck.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Check if car exists
+        const [carCheck] = await db.promise().query(
+            'SELECT IdVoiture FROM Voiture WHERE IdVoiture = ?',
+            [IdVoiture]
+        );
+        
+        if (carCheck.length === 0) {
+            return res.status(404).json({ message: 'Car not found' });
+        }
+        
+        // Update reservation with formatted dates
+        await db.promise().query(`
+            UPDATE Reservation 
+            SET IdUser = ?, IdVoiture = ?, DateDebut = ?, DateFin = ?, 
+                MontantReservation = ?, Statut = ?
+            WHERE IdReservation = ?
+        `, [IdUser, IdVoiture, formattedDateDebut, formattedDateFin, MontantReservation, Statut, reservationId]);
+        
+        // If status is changed to "Confirmée", update car status to "Loué" (STAT002)
+        if (Statut === 'Confirmée' && reservationCheck[0].Statut !== 'Confirmée') {
+            await db.promise().query(
+                'UPDATE Voiture SET IdStatut = "STAT002" WHERE IdVoiture = ?',
+                [IdVoiture]
+            );
+        }
+        // If status is changed from "Confirmée" to something else, update car status back to "Disponible" (STAT001)
+        else if (reservationCheck[0].Statut === 'Confirmée' && Statut !== 'Confirmée') {
+            await db.promise().query(
+                'UPDATE Voiture SET IdStatut = "STAT001" WHERE IdVoiture = ?',
+                [reservationCheck[0].IdVoiture]
+            );
+        }
+        
+        console.log(`Reservation ${reservationId} updated successfully`);
+        res.json({ 
+            message: 'Reservation updated successfully',
+            reservation: { 
+                IdReservation: reservationId, 
+                DateDebut: formattedDateDebut, 
+                DateFin: formattedDateFin, 
+                MontantReservation, 
+                Statut 
+            }
+        });
+    } catch (error) {
+        console.error('Error updating reservation:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });

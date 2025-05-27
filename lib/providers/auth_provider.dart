@@ -26,8 +26,18 @@ class AuthProvider with ChangeNotifier {
       
       if (userStr != null) {
         print('Found stored user data in AuthProvider');
-        _userInfo = json.decode(userStr);
-        _isAuthenticated = true;
+        try {
+          // Try to sync session with server
+          await _apiService.syncSession();
+          _userInfo = json.decode(userStr);
+          _isAuthenticated = true;
+        } catch (e) {
+          print('Failed to sync session with server: $e');
+          // Clear invalid session data
+          await prefs.remove('user');
+          _isAuthenticated = false;
+          _userInfo = {};
+        }
       } else {
         print('No stored user data found in AuthProvider');
         _isAuthenticated = false;
@@ -50,13 +60,21 @@ class AuthProvider with ChangeNotifier {
       final response = await _apiService.login(email, password);
       print('Login response: $response');  // Debug log
       
-      _isAuthenticated = response['success'] ?? false;
-      if (_isAuthenticated && response['user'] != null) {
+      if (response['success'] == true && response['user'] != null) {
         _userInfo = response['user'];
+        _isAuthenticated = true;
+        
+        // Store user data in shared preferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user', json.encode(_userInfo));
+        
         print('Login successful, user info: $_userInfo');  // Debug log
       } else {
-        print('Login failed: ${response['message'] ?? 'Unknown error'}');  // Debug log
+        print('Login failed: Invalid credentials');  // Debug log
+        _isAuthenticated = false;
+        _userInfo = {};
       }
+      
       _isLoading = false;
       notifyListeners();
       return _isAuthenticated;

@@ -57,7 +57,7 @@ class _UsersScreenState extends State<UsersScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search bar
+          // Barre de recherche
           Container(
             padding: const EdgeInsets.all(16.0),
             margin: const EdgeInsets.only(bottom: 16.0),
@@ -93,7 +93,7 @@ class _UsersScreenState extends State<UsersScreen> {
           ),
           const SizedBox(height: 24),
           
-          // Users table
+          // Table des utilisateurs
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -139,7 +139,7 @@ class _UsersScreenState extends State<UsersScreen> {
                             DataCell(Text(user['Email'] ?? '')),
                             DataCell(Text(user['Tel'] ?? '')),
                             DataCell(_buildRoleChip(user['Role'])),
-                            DataCell(_buildStatusChip('Active')), // Default to active
+                            DataCell(_buildStatusChip('Actif')), // Par défaut actif
                             DataCell(Row(
                               children: [
                                 IconButton(
@@ -267,7 +267,7 @@ class _UsersScreenState extends State<UsersScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header
+                // En-tête
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
@@ -314,14 +314,14 @@ class _UsersScreenState extends State<UsersScreen> {
                 ),
                 const SizedBox(height: 30),
                 
-                // Form
+                // Formulaire
                 Form(
                   key: formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Personal info section
+                      // Section informations personnelles
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -342,7 +342,7 @@ class _UsersScreenState extends State<UsersScreen> {
                             ),
                             const SizedBox(height: 16),
                             
-                            // Name row
+                            // Ligne du nom
                             Row(
                               children: [
                                 Expanded(
@@ -380,7 +380,7 @@ class _UsersScreenState extends State<UsersScreen> {
                             ),
                             const SizedBox(height: 16),
                             
-                            // Contact info
+                            // Informations de contact
                             Row(
                               children: [
                                 Expanded(
@@ -420,7 +420,7 @@ class _UsersScreenState extends State<UsersScreen> {
                             ),
                             const SizedBox(height: 16),
                             
-                            // Address
+                            // Adresse
                             TextFormField(
                               controller: adresseController,
                               decoration: InputDecoration(
@@ -440,7 +440,7 @@ class _UsersScreenState extends State<UsersScreen> {
                       
                       const SizedBox(height: 20),
                       
-                      // Account info section
+                      // Section informations du compte
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -461,7 +461,7 @@ class _UsersScreenState extends State<UsersScreen> {
                             ),
                             const SizedBox(height: 16),
                             
-                            // Password
+                            // Mot de passe
                             TextFormField(
                               controller: passwordController,
                               decoration: InputDecoration(
@@ -474,7 +474,7 @@ class _UsersScreenState extends State<UsersScreen> {
                                 prefixIcon: const Icon(Icons.lock),
                                 suffixIcon: IconButton(
                                   icon: const Icon(Icons.visibility_off),
-                                  onPressed: () {}, // Would toggle password visibility
+                                  onPressed: () {}, // Basculerait la visibilité du mot de passe
                                 ),
                               ),
                               obscureText: true,
@@ -483,7 +483,7 @@ class _UsersScreenState extends State<UsersScreen> {
                             ),
                             const SizedBox(height: 16),
                             
-                            // Role selection
+                            // Sélection du rôle
                             DropdownButtonFormField<String>(
                               value: selectedRole,
                               decoration: InputDecoration(
@@ -540,7 +540,7 @@ class _UsersScreenState extends State<UsersScreen> {
                 
                 const SizedBox(height: 30),
                 
-                // Action buttons
+                // Boutons d'action
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -566,7 +566,7 @@ class _UsersScreenState extends State<UsersScreen> {
                       onPressed: () async {
                         if (formKey.currentState!.validate()) {
                           try {
-                            // Create user data object
+                            // Créer l'objet de données utilisateur
                             final userData = {
                               'Nom': nomController.text,
                               'Prenom': prenomController.text,
@@ -579,7 +579,7 @@ class _UsersScreenState extends State<UsersScreen> {
                             
                             await _apiService.createUser(userData);
                             
-                            // Close dialog and refresh data
+                            // Fermer la boîte de dialogue et rafraîchir les données
                             if (mounted) {
                               Navigator.pop(context);
                               _loadUsers();
@@ -821,7 +821,7 @@ class _UsersScreenState extends State<UsersScreen> {
                           onPressed: () async {
                             if (formKey.currentState!.validate()) {
                               try {
-                                // Update user data
+                                // Mettre à jour les données utilisateur
                                 final userData = {
                                   'Nom': nomController.text,
                                   'Prenom': prenomController.text,
@@ -830,14 +830,14 @@ class _UsersScreenState extends State<UsersScreen> {
                                   'Role': selectedRole,
                                 };
                                 
-                                // Only include password if it was changed
+                                // Inclure le mot de passe uniquement s'il a été modifié
                                 if (passwordController.text.isNotEmpty) {
                                   userData['MotDePasse'] = passwordController.text;
                                 }
                                 
                                 await _apiService.updateUser(user['IdUser'], userData);
                                 
-                                // Close dialog and refresh data
+                                // Fermer la boîte de dialogue et rafraîchir les données
                                 if (mounted) {
                                   Navigator.pop(context);
                                   _loadUsers();
@@ -964,7 +964,7 @@ class _UsersScreenState extends State<UsersScreen> {
                       try {
                         await _apiService.deleteUser(user['IdUser']);
                         
-                        // Close dialog and refresh data
+                        // Fermer la boîte de dialogue et rafraîchir les données
                         if (mounted) {
                           Navigator.pop(context);
                           _loadUsers();
